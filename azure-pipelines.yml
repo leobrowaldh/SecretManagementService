@@ -5,10 +5,11 @@
 
 trigger:
 - master
+- develop
 
 variables:
   # Azure Resource Manager connection created during pipeline creation
-  azureSubscription: '49ffb78c-858a-45ea-bd6e-61128b5ddaef'
+  azureSubscription: 'InnofactorManagedComponents-ServiceConnection'
 
   # Function app name
   functionAppName: 'func-secretmanagementservice-development-001'
