@@ -20,6 +20,9 @@ variables:
   # Working Directory
   workingDirectory: '$(System.DefaultWorkingDirectory)/SecretManagementService'
 
+  # Resource Group
+  resourceGroup: 'LIA-ResourceGroup'
+
   #Env variables
   KeyVaultUri: 'https://sms-appsecrets.vault.azure.net/'
   ClientId: '4e72630e-e7a9-444f-8287-c7b704149746'
@@ -73,11 +76,19 @@ stages:
         deploy:
 
           steps:
+          - task: AzureAppServiceSettings@1
+            displayName: 'Update Function App Settings'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appName: $(functionAppName)
+              ResourceGroupName: $(resourceGroup)
+              AppSettings: '{"KEY_VAULT_URI": "$(KeyVaultUri)", "CLIENT_ID": "$(ClientId)", "TENANT_ID": "$(TenantId)"}'
+
           - task: AzureFunctionApp@2
             displayName: 'Azure functions app deploy'
             inputs:
               isFlexConsumption: true
-              connectedServiceNameARM: '$(azureSubscription)'
+              connectedServiceNameARM: $(azureSubscription)
               appType: 'functionAppLinux'
               appName: $(functionAppName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
