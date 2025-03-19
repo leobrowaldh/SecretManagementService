@@ -1,0 +1,10 @@
+{
+    "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "CLIENT_ID": "4e72630e-e7a9-444f-8287-c7b704149746",
+    "TENANT_ID": "d87548be-2c3c-454d-8214-8941643fc99f",
+    "KEY_VAULT_URI": "https://sms-appsecrets.vault.azure.net/"
+  }
+}
