@@ -82,9 +82,4 @@ stages:
               appName: $(functionAppName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
               runtimeStack:  'DOTNET-ISOLATED|9.0'
-              appSettings: |
-                {
-                  "KEY_VAULT_URI": "$(KeyVaultUri)",
-                  "CLIENT_ID": "$(ClientId)",
-                  "TENANT_ID": "$(TenantId)"
-                }
+              appSettings: '{ "KEY_VAULT_URI": "$(KeyVaultUri)", "CLIENT_ID": "$(ClientId)", "TENANT_ID": "$(TenantId)" }'
