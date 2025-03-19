@@ -16,18 +16,25 @@ public class TokenService : ITokenService
     {
         _httpClient = httpClient;
         _logger = logger;
-        _clientId = configuration["CLIENT_ID"]
-            ?? throw new ArgumentNullException("CLIENT_ID not found in configuration");
-        _tenantId = configuration["TENANT_ID"]
-            ?? throw new ArgumentNullException("TENANT_ID not found in configuration");
-        _clientSecret = configuration["client-secret"]
-            ?? throw new ArgumentNullException("client-secret not found in configuration");
+
+        try
+        {
+            _clientId = configuration["CLIENT_ID"]
+                ?? throw new ArgumentNullException("CLIENT_ID not found in configuration");
+            _tenantId = configuration["TENANT_ID"]
+                ?? throw new ArgumentNullException("TENANT_ID not found in configuration");
+            _clientSecret = configuration["client-secret"]
+                ?? throw new ArgumentNullException("client-secret not found in configuration");
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while initializing the TokenService.");
+            throw;
+        }
     }
 
     public async Task<string> GetAccessTokenAsync()
     {
-        try
-        {
             var tokenUrl = $"https://login.microsoftonline.com/{_tenantId}/oauth2/v2.0/token";
             var body = new FormUrlEncodedContent(new[]
             {
@@ -39,6 +46,8 @@ public class TokenService : ITokenService
                 new KeyValuePair<string, string>("grant_type", "client_credentials")
             });
 
+        try
+        {
             var response = await _httpClient.PostAsync(tokenUrl, body);
             response.EnsureSuccessStatusCode();
 

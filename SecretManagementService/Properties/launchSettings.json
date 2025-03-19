@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "FunctionApp1": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7015",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "CLIENT_ID": "4e72630e-e7a9-444f-8287-c7b704149746",
+        "TENANT_ID": "d87548be-2c3c-454d-8214-8941643fc99f",
+        "Environment": "Local"
+      }
+    }
+  }
+}
