@@ -35,7 +35,7 @@ public class TokenService : ITokenService
 
     public async Task<string> GetAccessTokenAsync()
     {
-            var tokenUrl = $"https://login.microsoftonline.com/{_tenantId}/oauth2/v2.0/token";
+        var tokenUrl = $"https://login.microsoftonline.com/{_tenantId}/oauth2/v2.0/token";
             var body = new FormUrlEncodedContent(new[]
             {
                 new KeyValuePair<string, string>("client_id", _clientId),

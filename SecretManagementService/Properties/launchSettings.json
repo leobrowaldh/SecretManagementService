@@ -7,7 +7,8 @@
       "environmentVariables": {
         "CLIENT_ID": "4e72630e-e7a9-444f-8287-c7b704149746",
         "TENANT_ID": "d87548be-2c3c-454d-8214-8941643fc99f",
-        "Environment": "Local"
+        "ASPNETCORE_ENVIRONMENT": "Local",
+        "KEY_VAULT_URI": "https://sms-appsecrets.vault.azure.net/"
       }
     }
   }

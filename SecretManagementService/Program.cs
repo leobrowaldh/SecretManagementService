@@ -32,10 +32,10 @@ static void ConfigureKeyVault(FunctionsApplicationBuilder builder)
     {
         // Fetch the Key Vault URI from environment variables or local.settings.json
         var keyVaultUri = builder.Configuration["KEY_VAULT_URI"]
-            ?? throw new ArgumentNullException("keyvault uri not found in configuration");
+            ?? throw new ArgumentNullException("KEY_VAULT_URI not found in configuration");
 
-        var environment = Environment.GetEnvironmentVariable("Environment")
-            ?? throw new ArgumentNullException("Environment variable not found in configuration");
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+            ?? throw new ArgumentNullException("ASPNETCORE_ENVIRONMENT not found in configuration");
 
         var excludeLocalDevelopment = (environment is not null && environment != "Local");
         var excludeManagedIdentity = !excludeLocalDevelopment;
