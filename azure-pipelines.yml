@@ -20,6 +20,11 @@ variables:
   # Working Directory
   workingDirectory: '$(System.DefaultWorkingDirectory)/SecretManagementService'
 
+  #Env variables
+  KeyVaultUri: 'https://sms-appsecrets.vault.azure.net/'
+  ClientId: '4e72630e-e7a9-444f-8287-c7b704149746'
+  TenantId: 'd87548be-2c3c-454d-8214-8941643fc99f'
+
 stages:
 - stage: Build
   displayName: Build stage
@@ -77,3 +82,9 @@ stages:
               appName: $(functionAppName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
               runtimeStack:  'DOTNET-ISOLATED|9.0'
+              appSettings: |
+                [
+                  { "name": "KEY_VAULT_URI", "value": "$(KeyVaultUri)", "slotSetting": false },
+                  { "name": "CLIENT_ID", "value": "$(ClientId)", "slotSetting": false },
+                  { "name": "TENANT_ID", "value": "$(TenantId)", "slotSetting": false }
+                ]
