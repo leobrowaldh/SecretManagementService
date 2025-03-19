@@ -83,20 +83,8 @@ stages:
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
               runtimeStack:  'DOTNET-ISOLATED|9.0'
               appSettings: |
-                [
-                  {
-                    "name": "KEY_VAULT_URI",
-                    "value": "$(KeyVaultUri)",
-                    "slotSetting": false
-                  },
-                  {
-                    "name": "CLIENT_ID",
-                    "value": "$(ClientId)", 
-                    "slotSetting": false
-                  },
-                  {
-                    "name": "TENANT_ID",
-                    "value": "$(TenantId)", 
-                    "slotSetting": false
-                  }
-                ]
+                {
+                  "KEY_VAULT_URI": "$(KeyVaultUri)",
+                  "CLIENT_ID": "$(ClientId)",
+                  "TENANT_ID": "$(TenantId)"
+                }
