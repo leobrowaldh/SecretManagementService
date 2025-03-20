@@ -1,11 +1,10 @@
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Services;
 using Azure.Identity;
-using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using Microsoft.Extensions.Configuration;
-using System;
+using Microsoft.Net.Http.Headers;
+using SecretManagementService.Services;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -19,7 +18,13 @@ builder.ConfigureFunctionsWebApplication();
 //     .ConfigureFunctionsApplicationInsights();
 
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddHttpClient();
+
+builder.Services.AddHttpClient(name: "AzureAuth",
+    configureClient: options =>
+    {
+        options.BaseAddress = new Uri("https://login.microsoftonline.com/");
+        options.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
+    });
 
 builder.Build().Run();
 
