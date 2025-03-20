@@ -24,9 +24,9 @@ variables:
   resourceGroup: 'LIA-ResourceGroup'
 
   #Env variables
-  KeyVaultUri: 'https://sms-appsecrets.vault.azure.net/'
-  ClientId: '4e72630e-e7a9-444f-8287-c7b704149746'
-  TenantId: 'd87548be-2c3c-454d-8214-8941643fc99f'
+  keyVaultUri: 'https://sms-appsecrets.vault.azure.net/'
+  clientId: '4e72630e-e7a9-444f-8287-c7b704149746'
+  tenantId: 'd87548be-2c3c-454d-8214-8941643fc99f'
 
 stages:
 - stage: Build
@@ -76,19 +76,6 @@ stages:
         deploy:
 
           steps:
-          - task: AzureAppServiceSettings@1
-            displayName: 'Update Function App Settings'
-            inputs:
-              azureSubscription: $(azureSubscription)
-              appName: $(functionAppName)
-              ResourceGroupName: $(resourceGroup)
-              AppSettings: |
-                {
-                  "KEY_VAULT_URI": "$(KeyVaultUri)",
-                  "CLIENT_ID": "$(ClientId)",
-                  "TENANT_ID": "$(TenantId)"
-                }
-
 
           - task: AzureFunctionApp@2
             displayName: 'Azure functions app deploy'
@@ -99,3 +86,7 @@ stages:
               appName: $(functionAppName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
               runtimeStack:  'DOTNET-ISOLATED|9.0'
+              appSettings: >
+                -KEY_VAULT_URI $(keyVaultUri)
+                -CLIENT_ID $(clientId)
+                -TENANT_ID $(tenantId)
