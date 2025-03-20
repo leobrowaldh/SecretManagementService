@@ -1,20 +1,21 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
 using System.Text.Json;
 
-namespace Services;
+namespace SecretManagementService.Services;
 
 public class TokenService : ITokenService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<TokenService> _logger;
     private readonly string _tenantId;
     private readonly string _clientId;
     private readonly string _clientSecret;
 
-    public TokenService(IConfiguration configuration, HttpClient httpClient, ILogger<TokenService> logger)
+    public TokenService(IConfiguration configuration, IHttpClientFactory httpClientFactory, ILogger<TokenService> logger)
     {
-        _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
 
         try
@@ -35,20 +36,23 @@ public class TokenService : ITokenService
 
     public async Task<string> GetAccessTokenAsync()
     {
-        var tokenUrl = $"https://login.microsoftonline.com/{_tenantId}/oauth2/v2.0/token";
-            var body = new FormUrlEncodedContent(new[]
-            {
-                new KeyValuePair<string, string>("client_id", _clientId),
+        var tokenUri = $"{_tenantId}/oauth2/v2.0/token";
 
-                new KeyValuePair<string, string>("client_secret", _clientSecret),
+        var body = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("client_id", _clientId),
 
-                new KeyValuePair<string, string>("scope", "https://graph.microsoft.com/.default"),
-                new KeyValuePair<string, string>("grant_type", "client_credentials")
-            });
+            new KeyValuePair<string, string>("client_secret", _clientSecret),
+
+            new KeyValuePair<string, string>("scope", "https://graph.microsoft.com/.default"),
+            new KeyValuePair<string, string>("grant_type", "client_credentials")
+        });
+
+        var httpClient = _httpClientFactory.CreateClient(name: "AzureAuth");
 
         try
         {
-            var response = await _httpClient.PostAsync(tokenUrl, body);
+            var response = await httpClient.PostAsync(tokenUri, body);
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
