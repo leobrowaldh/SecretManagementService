@@ -82,7 +82,13 @@ stages:
               azureSubscription: $(azureSubscription)
               appName: $(functionAppName)
               ResourceGroupName: $(resourceGroup)
-              AppSettings: '{"KEY_VAULT_URI": "$(KeyVaultUri)", "CLIENT_ID": "$(ClientId)", "TENANT_ID": "$(TenantId)"}'
+              AppSettings: |
+                {
+                  "KEY_VAULT_URI": "$(KeyVaultUri)",
+                  "CLIENT_ID": "$(ClientId)",
+                  "TENANT_ID": "$(TenantId)"
+                }
+
 
           - task: AzureFunctionApp@2
             displayName: 'Azure functions app deploy'
