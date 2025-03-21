@@ -18,20 +18,12 @@ public class TokenService : ITokenService
         _httpClientFactory = httpClientFactory;
         _logger = logger;
 
-        try
-        {
-            _clientId = configuration["CLIENT_ID"]
-                ?? throw new ArgumentNullException("CLIENT_ID not found in configuration");
-            _tenantId = configuration["TENANT_ID"]
-                ?? throw new ArgumentNullException("TENANT_ID not found in configuration");
-            _clientSecret = configuration["client-secret"]
-                ?? throw new ArgumentNullException("client-secret not found in configuration");
-        }
-        catch(Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while initializing the TokenService.");
-            throw;
-        }
+        _clientId = configuration["CLIENT_ID"]
+            ?? throw new InvalidOperationException("CLIENT_ID not found in configuration");
+        _tenantId = configuration["TENANT_ID"]
+            ?? throw new InvalidOperationException("TENANT_ID not found in configuration");
+        _clientSecret = configuration["client-secret"]
+            ?? throw new InvalidOperationException("client-secret not found in configuration");
     }
 
     public async Task<string> GetAccessTokenAsync()
@@ -49,7 +41,7 @@ public class TokenService : ITokenService
         });
 
         var httpClient = _httpClientFactory.CreateClient(name: "AzureAuth");
-
+        
         try
         {
             var response = await httpClient.PostAsync(tokenUri, body);
@@ -58,12 +50,17 @@ public class TokenService : ITokenService
             var json = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<JsonElement>(json);
             return data.GetProperty("access_token").GetString()
-                ?? throw new NullReferenceException("access_token not found in response");
+                ?? throw new InvalidOperationException("access_token not found in response");
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "An error occurred while getting the access token.");
-            throw;
+            _logger.LogError(ex, "HTTP request failed while getting the access token.");
+            throw new InvalidOperationException("Failed to retrieve access token from the server.", ex);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Error occurred while deserializing the response.");
+            throw new InvalidOperationException("Failed to deserialize the access token response.", ex);
         }
     }
 }

@@ -18,11 +18,19 @@ builder.ConfigureFunctionsWebApplication();
 //     .ConfigureFunctionsApplicationInsights();
 
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IGraphApiService, GraphApiService>();
 
 builder.Services.AddHttpClient(name: "AzureAuth",
     configureClient: options =>
     {
         options.BaseAddress = new Uri("https://login.microsoftonline.com/");
+        options.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
+    });
+
+builder.Services.AddHttpClient(name: "GraphApi",
+    configureClient: options =>
+    {
+        options.BaseAddress = new Uri("https://graph.microsoft.com/v1.0/");
         options.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
     });
 
