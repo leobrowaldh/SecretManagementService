@@ -27,6 +27,8 @@ variables:
   keyVaultUri: 'https://sms-appsecrets.vault.azure.net/'
   clientId: '4e72630e-e7a9-444f-8287-c7b704149746'
   tenantId: 'd87548be-2c3c-454d-8214-8941643fc99f'
+  #Needed for ConfigureKeyVault method in Program.cs:
+  environment: 'Development'
   #hostId must be less than 32 chars to avoid name collisions caused by truncation:
   hostId: func-secretmgmt-dev-001 
 
@@ -93,3 +95,4 @@ stages:
                 -CLIENT_ID $(clientId)
                 -TENANT_ID $(tenantId)
                 -AzureFunctionsWebHost__hostid $(hostId)
+                -ASPNETCORE_ENVIRONMENT $(environment)
