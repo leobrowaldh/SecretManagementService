@@ -5,6 +5,7 @@ using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Net.Http.Headers;
 using SecretManagementService.Services;
+using Microsoft.Azure.Functions.Worker;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -12,10 +13,10 @@ ConfigureKeyVault(builder);
 
 builder.ConfigureFunctionsWebApplication();
 
-// Application Insights isn't enabled by default. See https://aka.ms/AAt8mw4.
-// builder.Services
-//     .AddApplicationInsightsTelemetryWorkerService()
-//     .ConfigureFunctionsApplicationInsights();
+// Application Insights:
+builder.Services
+    .AddApplicationInsightsTelemetryWorkerService()
+    .ConfigureFunctionsApplicationInsights();
 
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGraphApiService, GraphApiService>();
