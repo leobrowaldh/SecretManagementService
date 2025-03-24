@@ -13,13 +13,13 @@ namespace SecretManagementService.Functions;
 public class FetchExpiringSecrets
 {
     private readonly ILogger _logger;
-    private readonly IGraphApiService _graphApiService;
+    private readonly ISecretsService _secretsService;
     private readonly int _daysUntilSecretsExpire = 30;
 
-    public FetchExpiringSecrets(ILogger<FetchExpiringSecrets> logger, IGraphApiService graphApiService)
+    public FetchExpiringSecrets(ILogger<FetchExpiringSecrets> logger, ISecretsService secretsService)
     {
         _logger = logger;
-        _graphApiService = graphApiService;
+        _secretsService = secretsService;
     }
 
     [Function("FetchExpiringSecrets")]
@@ -28,22 +28,7 @@ public class FetchExpiringSecrets
     {
         _logger.LogInformation($"Timer trigger function FetchExpiringSecrets executed at: {DateTime.Now}");
 
-        try
-        {
-            _logger.LogInformation("Checking for expiring secrets...");
-            var expiringSecrets = await _graphApiService.GetExpiringSecrets(_daysUntilSecretsExpire);
-            if (expiringSecrets == null || expiringSecrets.Count == 0)
-            {
-                _logger.LogInformation("No expiring secrets found.");
-                return;
-            }
-            _logger.LogInformation($"Successfully fetched {expiringSecrets.Count} expiring secrets.");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "FetchExpiringSecrets function failed.");
-            throw; // Ensure Azure logs this failure as an unhandled exception
-        }
+        var expiringSecrets = await _secretsService.GetExpiringSecrets(_daysUntilSecretsExpire);
 
         if (myTimer.ScheduleStatus is not null)
         {

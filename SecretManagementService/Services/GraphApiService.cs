@@ -27,7 +27,7 @@ public class GraphApiService: IGraphApiService
         _logger = logger;
     }
 
-    public async Task<List<ExpiringSecret>?> GetExpiringSecrets(int _daysUntilSecretsExpire)
+    public async Task<GraphApiGenericResponse<GraphApiApplicationResponse>> GetAppDataAsync()
     {
         _logger.LogInformation("Fetching authorization token...");
         var token = await _tokenService.GetAccessTokenAsync();
@@ -36,24 +36,26 @@ public class GraphApiService: IGraphApiService
         var client = _httpClientFactory.CreateClient("GraphApi");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await client.GetAsync(applicationsUri);
-        var responseContent = await response.Content.ReadAsStringAsync();
-        var graphApiApplicationsResponse = JsonSerializer.Deserialize<GraphApiGenericResponse<GraphApiApplicationResponse>>(responseContent);
+        try
+        {
+            var response = await client.GetAsync(applicationsUri);
+            response.EnsureSuccessStatusCode();
+            var responseContent = await response.Content.ReadAsStringAsync();
 
-        List<ExpiringSecret>? expiringSecrets = graphApiApplicationsResponse?.value
-            .SelectMany(app => app.passwordCredentials
-                .Where(cred => cred.endDateTime < DateTime.Now.AddDays(_daysUntilSecretsExpire))
-                .Select(cred => new ExpiringSecret
-                {
-                    AppObjectId = app.id,
-                    AppId = app.appId,
-                    DisplayName = cred.displayName,
-                    EndDateTime = cred.endDateTime,
-                    KeyId = cred.keyId
+            var graphApiApplicationsResponse = JsonSerializer.Deserialize<GraphApiGenericResponse<GraphApiApplicationResponse>>(responseContent);
+            if (graphApiApplicationsResponse == null)
+            {
+                _logger.LogError("Deserialization returned null. Response content: {ResponseContent}", responseContent);
+                throw new InvalidOperationException("Failed to deserialize Graph API response.");
+            }
 
-                })
-            ).ToList();
-
-        return expiringSecrets;
+            return graphApiApplicationsResponse;
+        }
+        catch (HttpRequestException httpRequestException)
+        {
+            _logger.LogError(httpRequestException, "Error occurred while making HTTP request to Graph API.");
+            throw;
+        }
     }
+
 }

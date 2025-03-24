@@ -7,8 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace SecretManagementService.Services;
-
-public interface IGraphApiService
+public interface ISecretsService
 {
-    public Task<GraphApiGenericResponse<GraphApiApplicationResponse>> GetAppDataAsync();
+    public Task<List<ExpiringSecret>?> GetExpiringSecrets(int _daysUntilSecretsExpire);
 }
