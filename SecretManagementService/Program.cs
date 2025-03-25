@@ -21,6 +21,7 @@ builder.Services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGraphApiService, GraphApiService>();
 builder.Services.AddScoped<ISecretsService, SecretsService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddHttpClient(name: "AzureAuth",
     configureClient: options =>

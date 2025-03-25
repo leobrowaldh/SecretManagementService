@@ -23,7 +23,7 @@ public class FetchExpiringSecrets
         _secretsService = secretsService;
     }
 
-    [Function("FetchExpiringSecrets")]
+    [Function(nameof(FetchExpiringSecrets))]
     [QueueOutput("expiringSecrets-queue")]  //  This binds the function output to the queue
     public async Task<IList<string>?> FetchSecretsAsync(
         [TimerTrigger("0 0 8 * * *", RunOnStartup = true)] TimerInfo myTimer)
@@ -48,16 +48,5 @@ public class FetchExpiringSecrets
         }
 
         return messages; //  This automatically sends messages to the queue
-    }
-
-    [Function("ProcessExpiringSecrets")]
-    public void ProcessSecretsAsync(
-    [QueueTrigger("expiringSecrets-queue")] string message,
-    FunctionContext context)
-    {
-        var logger = context.GetLogger("ProcessExpiringSecrets");
-        var secret = JsonSerializer.Deserialize<ExpiringSecret>(message);
-
-        logger.LogInformation("Processing secret: {secretId}", secret.KeyId);
     }
 }
