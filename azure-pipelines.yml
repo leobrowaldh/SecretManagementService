@@ -30,7 +30,9 @@ variables:
   #Needed for ConfigureKeyVault method in Program.cs:
   environment: 'Development'
   #hostId must be less than 32 chars to avoid name collisions caused by truncation:
-  hostId: func-secretmgmt-dev-001 
+  hostId: 'func-secretmgmt-dev-001'
+  #Configures when notification of expiring secrets should occur
+  daysUntilSecretsExpire: '30'
 
 stages:
 - stage: Build
@@ -96,3 +98,4 @@ stages:
                 -TENANT_ID $(tenantId)
                 -AzureFunctionsWebHost__hostid $(hostId)
                 -ASPNETCORE_ENVIRONMENT $(environment)
+                -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
