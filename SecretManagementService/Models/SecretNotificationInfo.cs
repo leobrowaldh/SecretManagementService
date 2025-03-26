@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace SecretManagementService.Models.Dtos;
-public class SecretNotificationDto
+public class SecretNotificationInfo
 {
     public required string SecretId { get; set; }
     public required string AppId { get; set; }
@@ -13,7 +13,5 @@ public class SecretNotificationDto
     public string?[]? OwnerId { get; set; }
     public required DateTime EndDateTime { get; set; }
     public DateTime? LastTimeNotified { get; set; }
-    public List<string> Emails { get; set; } = [];
-    public List<string> PhoneNumbers { get; set; } = [];
-    public List<string> ApiEndpoints { get; set; } = [];
+    public required ContactMethod ContactMethod { get; set; }
 }

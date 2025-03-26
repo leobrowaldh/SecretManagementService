@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace SecretManagementService.Services;
 public class DbService : IDbService
 {
-    public Task<bool> ShouldNotifyAsync(string secretId, out SecretNotificationDto notificationDto)
+    public Task<bool> ShouldNotifyAsync(string secretId, out SecretNotificationInfo notificationDto)
     {
         throw new NotImplementedException();
     }

@@ -8,5 +8,5 @@ using System.Threading.Tasks;
 namespace SecretManagementService.Services;
 public interface IDbService
 {
-    public Task<bool> ShouldNotifyAsync(string secretId, out SecretNotificationDto notificationDto);
+    public Task<SecretNotificationInfo?> GetNotificationInfoAsync(string secretId);
 }

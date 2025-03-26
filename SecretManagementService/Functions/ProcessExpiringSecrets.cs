@@ -8,6 +8,7 @@ using SecretManagementService.Models;
 using SecretManagementService.Models.Response;
 using SecretManagementService.Services;
 using System.Collections.Generic;
+using SecretManagementService.Models.Dtos;
 
 namespace SecretManagementService.Functions;
 
@@ -23,13 +24,14 @@ public class ProcessExpiringSecrets
     }
 
     [Function(nameof(ProcessExpiringSecrets))]
-    public void ProcessSecretsAsync(
+    public async Task ProcessSecretsAsync(
         [QueueTrigger("expiringSecrets-queue")] string message, FunctionContext context)
     {
         //another way of creating a logger, using functionContext, which provide function execution context.
         var logger = context.GetLogger("ProcessExpiringSecrets");
         var secret = JsonSerializer.Deserialize<ExpiringSecret>(message);
 
-        logger.LogInformation("Processing secret: {secretId}", secret.KeyId);
+        logger.LogInformation("Calling notification service...");
+        (SecretNotificationInfo ? notificationDto, bool shouldNotify) = await _notificationService.FetchNotificationInfoAsync(secret.KeyId);
     }
 }
