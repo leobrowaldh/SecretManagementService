@@ -9,5 +9,6 @@ using System.Threading.Tasks;
 namespace SecretManagementService.Services;
 public interface INotificationService
 {
-    public Task<(SecretNotificationInfo? notificationDto, bool shouldNotify)> FetchNotificationInfoAsync(string secretId);
+    public Task<SecretNotificationInfo> FetchNotificationInfoAsync(string secretId);
+    public Task NotifyAsync(SecretNotificationInfo secretNotificationInfo);
 }

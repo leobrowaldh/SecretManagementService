@@ -8,8 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace SecretManagementService.Mocks;
-public class MockNotificationService : IDbService
+public class DbServiceMock : IDbService
 {
+    private readonly string _secretIdToTry = "Notify_All_30d_Null";
     private static readonly List<SecretNotificationInfo> _notifications = new()
     {
         new SecretNotificationInfo
@@ -23,7 +24,7 @@ public class MockNotificationService : IDbService
             ContactMethod = new ContactMethod
             {
                 IsEmail = true,
-                IsPhoneNumber = true,
+                IsSMS = true,
                 IsApiEndpoint = true,
                 Emails = ["email1@example.com"],
                 PhoneNumbers = ["+46701234567"],
@@ -49,7 +50,7 @@ public class MockNotificationService : IDbService
             ContactMethod = new ContactMethod
             {
                 IsEmail = true,
-                IsPhoneNumber = true,
+                IsSMS = true,
                 IsApiEndpoint = true,
                 Emails = ["email2@example.com"],
                 PhoneNumbers = ["+4687654321"],
@@ -75,7 +76,7 @@ public class MockNotificationService : IDbService
             ContactMethod = new ContactMethod
             {
                 IsEmail = true,
-                IsPhoneNumber = true,
+                IsSMS = true,
                 IsApiEndpoint = true,
                 Emails = ["email3@example.com"],
                 PhoneNumbers = ["+4698765432"],
@@ -101,7 +102,7 @@ public class MockNotificationService : IDbService
             ContactMethod = new ContactMethod
             {
                 IsEmail = true,
-                IsPhoneNumber = true,
+                IsSMS = true,
                 IsApiEndpoint = true,
                 Emails = ["email4@example.com"],
                 PhoneNumbers = ["+46123456789"],
@@ -120,7 +121,7 @@ public class MockNotificationService : IDbService
 
     public Task<SecretNotificationInfo?> GetNotificationInfoAsync(string secretId)
     {
-        var notificationDto = _notifications.FirstOrDefault(n => n.SecretId == secretId);
+        var notificationDto = _notifications.FirstOrDefault(n => n.SecretId == _secretIdToTry);
         return Task.FromResult(notificationDto);
     }
 }

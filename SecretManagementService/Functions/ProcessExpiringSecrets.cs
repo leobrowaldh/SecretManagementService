@@ -17,7 +17,7 @@ public class ProcessExpiringSecrets
     private readonly ILogger _logger;
     private readonly INotificationService _notificationService;
 
-    public ProcessExpiringSecrets(ILogger<FetchExpiringSecrets> logger, INotificationService notificationService)
+    public ProcessExpiringSecrets(ILogger<ProcessExpiringSecrets> logger, INotificationService notificationService)
     {
         _logger = logger;
         _notificationService = notificationService;
@@ -29,9 +29,24 @@ public class ProcessExpiringSecrets
     {
         //another way of creating a logger, using functionContext, which provide function execution context.
         var logger = context.GetLogger("ProcessExpiringSecrets");
+
         var secret = JsonSerializer.Deserialize<ExpiringSecret>(message);
+        if (secret == null)
+        {
+            //logger.LogError("Message was null or empty: {message}", message);
+            throw new InvalidOperationException($"Failed to deserialize message, message is null or empty: {message}");
+        }
 
         logger.LogInformation("Calling notification service...");
-        (SecretNotificationInfo ? notificationDto, bool shouldNotify) = await _notificationService.FetchNotificationInfoAsync(secret.KeyId);
+        SecretNotificationInfo secretNotificationInfo = await _notificationService.FetchNotificationInfoAsync(secret.KeyId);
+
+        if (secretNotificationInfo.ShouldNotify)
+        {
+            await _notificationService.NotifyAsync(secretNotificationInfo);
+        }
+        else
+        {
+            logger.LogInformation("No notification needed at this point in time.");
+        }    
     }
 }
