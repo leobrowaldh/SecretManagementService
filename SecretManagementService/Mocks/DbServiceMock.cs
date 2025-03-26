@@ -15,6 +15,7 @@ public class DbServiceMock : IDbService
     {
         new SecretNotificationInfo
         {
+            DaysUntilSecretExpires = 30,
             SecretId = "Notify_All_30d_Null",
             AppId = "App_Notify_All_30d_Null",
             DisplayName = "Notify All - 30d - Null",
@@ -41,6 +42,7 @@ public class DbServiceMock : IDbService
         },
         new SecretNotificationInfo
         {
+            DaysUntilSecretExpires = 30,
             SecretId = "Notify_All_15d_15dAgo",
             AppId = "App_Notify_All_15d_15dAgo",
             DisplayName = "Notify All - 15d - 15dAgo",
@@ -67,6 +69,7 @@ public class DbServiceMock : IDbService
         },
         new SecretNotificationInfo
         {
+            DaysUntilSecretExpires = 30,
             SecretId = "Notify_All_15d_1mAgo",
             AppId = "App_Notify_All_15d_1mAgo",
             DisplayName = "Notify All - 15d - 1mAgo",
@@ -93,6 +96,7 @@ public class DbServiceMock : IDbService
         },
         new SecretNotificationInfo
         {
+            DaysUntilSecretExpires = 30,
             SecretId = "Notify_All_5d_25dAgo",
             AppId = "App_Notify_All_5d_25dAgo",
             DisplayName = "Notify All - 5d - 25dAgo",
