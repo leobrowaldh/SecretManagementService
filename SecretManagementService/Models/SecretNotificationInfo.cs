@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 namespace SecretManagementService.Models.Dtos;
 public class SecretNotificationInfo
 {
+    private readonly int _daysUntilSecretExpires;
     public required string SecretId { get; set; }
     public required string AppId { get; set; }
     public string? DisplayName { get; set; }
@@ -14,9 +16,20 @@ public class SecretNotificationInfo
     public required DateTime EndDateTime { get; set; }
     public DateTime? LastTimeNotified { get; set; }
     public required ContactMethod ContactMethod { get; set; }
+
+    //Notification should be sent if:
+    //1. The secret has never been notified
+    //2. The secret has not been notified in the last half of the time until it expires
+    //3. The secret expires in less than 5 days and has not been notified in the last 5 days
+    //4. The secret expires today
     public bool ShouldNotify =>
         LastTimeNotified == null ||
-        LastTimeNotified < DateTime.UtcNow.AddDays(-15) ||
+        LastTimeNotified < DateTime.UtcNow.AddDays(-(_daysUntilSecretExpires/2)) ||
         (EndDateTime < DateTime.UtcNow.AddDays(5) && LastTimeNotified < DateTime.UtcNow.AddDays(-5)) ||
         EndDateTime.Day == DateTime.UtcNow.Day;
+
+    public SecretNotificationInfo(IConfiguration configuration)
+    {
+        _daysUntilSecretExpires = configuration.GetValue<int>("DAYS_UNTIL_SECRET_EXPIRES");
+    }
 }

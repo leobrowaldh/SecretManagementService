@@ -24,8 +24,6 @@ public class NotificationService : INotificationService
         if (secretNotificationInfo == null)
         {
             //if the secret is registered in our app, we need to have the stored notification info.
-            //is logging needed, or is it enough to throw?
-            //_logger.LogError("No notification info found for secretId: {secretId}", secretId);
             throw new InvalidOperationException($"No notification info found for secretId {secretId}");
         }
 
