@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Net.Http.Headers;
 using SecretManagementService.Services;
 using Microsoft.Azure.Functions.Worker;
+using SecretManagementService.Mocks;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -22,6 +23,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGraphApiService, GraphApiService>();
 builder.Services.AddScoped<ISecretsService, SecretsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IDbService, DbServiceMock>(); //***Mocking***
 
 builder.Services.AddHttpClient(name: "AzureAuth",
     configureClient: options =>

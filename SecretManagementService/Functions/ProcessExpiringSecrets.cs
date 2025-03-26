@@ -14,10 +14,12 @@ namespace SecretManagementService.Functions;
 public class ProcessExpiringSecrets
 {
     private readonly ILogger _logger;
+    private readonly INotificationService _notificationService;
 
-    public ProcessExpiringSecrets(ILogger<FetchExpiringSecrets> logger)
+    public ProcessExpiringSecrets(ILogger<FetchExpiringSecrets> logger, INotificationService notificationService)
     {
         _logger = logger;
+        _notificationService = notificationService;
     }
 
     [Function(nameof(ProcessExpiringSecrets))]
