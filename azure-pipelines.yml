@@ -33,6 +33,7 @@ variables:
   hostId: 'func-secretmgmt-dev-001'
   #Configures when notification of expiring secrets should occur
   daysUntilSecretsExpire: '30'
+  sms-ui: 'www.notyetimplemented.com'
 
 stages:
 - stage: Build
@@ -99,3 +100,4 @@ stages:
                 -AzureFunctionsWebHost__hostid $(hostId)
                 -ASPNETCORE_ENVIRONMENT $(environment)
                 -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
+                -SMS_URL $(sms-ui)
