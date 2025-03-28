@@ -7,7 +7,6 @@ if ! command -v jq &> /dev/null; then
 fi
 
 APP_DIR=$(pwd)/..
-APP_SETTINGS="$APP_DIR/appsettings.json"
 LAUNCH_SETTINGS="$APP_DIR/Properties/launchSettings.json"
 
 # Initialize appSettings variable
@@ -18,6 +17,7 @@ if [[ -f "$LAUNCH_SETTINGS" ]]; then
     echo "Extracting from launchSettings.json..."
     env_vars=$(cat "$LAUNCH_SETTINGS" | jq -r '.profiles | to_entries[] | select(.value.environmentVariables) | .value.environmentVariables | to_entries[] | select(.key != "ASPNETCORE_ENVIRONMENT") | " -\(.key)=\(.value)"')
     APP_SETTINGS_STR+="$env_vars"
+    echo "Extracted environment variables: $APP_SETTINGS_STR"  # Debug
 fi
 
 # Set the appSettings as a pipeline variable to be used later
