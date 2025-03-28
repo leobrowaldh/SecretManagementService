@@ -24,16 +24,10 @@ variables:
   resourceGroup: 'LIA-ResourceGroup'
 
   #Env variables
-  keyVaultUri: 'https://sms-appsecrets.vault.azure.net/'
-  clientId: '4e72630e-e7a9-444f-8287-c7b704149746'
-  tenantId: 'd87548be-2c3c-454d-8214-8941643fc99f'
+
   #Needed for ConfigureKeyVault method in Program.cs:
   environment: 'Development'
-  #hostId must be less than 32 chars to avoid name collisions caused by truncation:
-  hostId: 'func-secretmgmt-dev-001'
-  #Configures when notification of expiring secrets should occur
-  daysUntilSecretsExpire: '30'
-  sms-ui: 'www.notyetimplemented.com'
+  
 
 stages:
 - stage: Build
@@ -72,6 +66,25 @@ stages:
   condition: succeeded()
 
   jobs:
+
+  - job: SetEnvironmentVariables
+    displayName: "Extract and Set Environment Variables"
+    steps:
+      # Install jq for Linux-based deploy machine
+      - script: |
+          if ! command -v jq &> /dev/null; then
+            echo "jq not found. Installing jq..."
+            sudo apt-get update
+            sudo apt-get install -y jq
+          fi
+        displayName: "Install jq on Linux Deploy Machine"
+
+      # Run the environment variable extraction script
+      - script: |
+          chmod +x $(System.DefaultWorkingDirectory)/Scripts/export-env-vars.sh
+          $(System.DefaultWorkingDirectory)/Scripts/export-env-vars.sh
+        displayName: "Extract Environment Variables"
+
   - deployment: Deploy
     displayName: Deploy
     environment: 'development'
@@ -94,10 +107,5 @@ stages:
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
               runtimeStack:  'DOTNET-ISOLATED|9.0'
               appSettings: >
-                -KEY_VAULT_URI $(keyVaultUri)
-                -CLIENT_ID $(clientId)
-                -TENANT_ID $(tenantId)
-                -AzureFunctionsWebHost__hostid $(hostId)
                 -ASPNETCORE_ENVIRONMENT $(environment)
-                -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
-                -SMS_URL $(sms-ui)
+                $(appSettings)  # Use dynamically set appSettings
