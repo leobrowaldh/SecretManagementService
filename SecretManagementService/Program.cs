@@ -7,6 +7,9 @@ using Microsoft.Net.Http.Headers;
 using SecretManagementService.Services;
 using Microsoft.Azure.Functions.Worker;
 using SecretManagementService.Mocks;
+using SendGrid;
+using SendGrid.Extensions.DependencyInjection;
+using SendGrid.Helpers.Mail;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -24,6 +27,7 @@ builder.Services.AddScoped<IGraphApiService, GraphApiService>();
 builder.Services.AddScoped<ISecretsService, SecretsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IDbService, DbServiceMock>(); //***Mocking***
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddHttpClient(name: "AzureAuth",
     configureClient: options =>
@@ -38,6 +42,19 @@ builder.Services.AddHttpClient(name: "GraphApi",
         options.BaseAddress = new Uri("https://graph.microsoft.com/v1.0/");
         options.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
     });
+
+// SendGrid: email service
+builder.Services.AddSendGrid(options =>
+{
+    // Fetch the SendGrid API key from Key Vault
+    var sendGridApiKey = builder.Configuration["sendgrid-api-key"];
+    if (string.IsNullOrEmpty(sendGridApiKey))
+    {
+        throw new ArgumentNullException("sendgrid-api-key is not found in Key Vault");
+    }
+
+    options.ApiKey = sendGridApiKey;
+});
 
 builder.Build().Run();
 

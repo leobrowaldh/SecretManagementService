@@ -27,7 +27,7 @@ public class DbServiceMock : IDbService
                 IsEmail = true,
                 IsSMS = true,
                 IsApiEndpoint = true,
-                Emails = ["email1@example.com"],
+                Emails = ["leobrowaldh@gmail.com"],
                 PhoneNumbers = ["+46701234567"],
                 ApiInfo = new ApiInfo
                 {
