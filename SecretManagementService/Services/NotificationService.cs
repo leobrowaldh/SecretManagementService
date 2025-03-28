@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using SecretManagementService.Models.Dtos;
 using System;
 using System.Collections.Generic;
@@ -11,11 +12,15 @@ public class NotificationService : INotificationService
 {
     private readonly IDbService _dbService;
     private readonly ILogger<NotificationService> _logger;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
 
-    public NotificationService(IDbService dbService, ILogger<NotificationService> logger)
+    public NotificationService(IDbService dbService, ILogger<NotificationService> logger, IEmailService emailService, IConfiguration configuration)
     {
         _dbService = dbService;
         _logger = logger;
+        _emailService = emailService;
+        _configuration = configuration;
     }
 
     public async Task<SecretNotificationInfo> FetchNotificationInfoAsync(string secretId)
@@ -34,7 +39,13 @@ public class NotificationService : INotificationService
     {
         if (secretNotificationInfo.ContactMethod.IsEmail)
         {
-            //send email => send grid nuget package, or logic app
+            foreach (var email in secretNotificationInfo.ContactMethod.Emails)
+            {
+                _logger.LogInformation("Sending email notification for secret {SecretId}", secretNotificationInfo.SecretId);
+                await _emailService.SendEmailAsync(email, "Secret Expiration Notification",
+                    $"<p>Your secret <strong>{secretNotificationInfo.DisplayName}</strong> is expiring on {secretNotificationInfo.EndDateTime}.</p>" +
+                    $"<p>Access your account: <a href='{_configuration["SMS_URL"]}'>{_configuration["SMS_URL"]}</a></p>");
+            }
         }
         if (secretNotificationInfo.ContactMethod.IsSMS)
         {

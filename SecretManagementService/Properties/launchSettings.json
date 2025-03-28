@@ -9,7 +9,8 @@
         "TENANT_ID": "d87548be-2c3c-454d-8214-8941643fc99f",
         "ASPNETCORE_ENVIRONMENT": "Local",
         "KEY_VAULT_URI": "https://sms-appsecrets.vault.azure.net/",
-        "DAYS_UNTIL_SECRET_EXPIRES": "30"
+        "DAYS_UNTIL_SECRET_EXPIRES": "30",
+        "SMS_URL": "www.notyetimplemented.com"
       }
     }
   }
