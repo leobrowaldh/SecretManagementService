@@ -10,6 +10,8 @@ using SecretManagementService.Mocks;
 using SendGrid;
 using SendGrid.Extensions.DependencyInjection;
 using SendGrid.Helpers.Mail;
+using Microsoft.EntityFrameworkCore;
+using Db;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -55,6 +57,11 @@ builder.Services.AddSendGrid(options =>
     }
 
     options.ApiKey = sendGridApiKey;
+});
+
+builder.Services.AddDbContext<SmsDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SecretManagementServiceContext"));
 });
 
 builder.Build().Run();
