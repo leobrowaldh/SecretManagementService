@@ -6,7 +6,8 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-APP_DIR=$(pwd)/..
+SCRIPT_DIR="$(pwd)"
+APP_DIR="$SCRIPT_DIR/../SecretManagementService"
 LAUNCH_SETTINGS="$APP_DIR/Properties/launchSettings.json"
 
 # Initialize appSettings variable

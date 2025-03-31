@@ -7,4 +7,5 @@ using System.Threading.Tasks;
 namespace SecretManagementService.Services;
 public interface ISmsService
 {
+
 }
