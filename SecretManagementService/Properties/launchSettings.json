@@ -10,8 +10,10 @@
         "ASPNETCORE_ENVIRONMENT": "Local",
         "KEY_VAULT_URI": "https://sms-appsecrets.vault.azure.net/",
         "DAYS_UNTIL_SECRET_EXPIRES": "30",
-        "SMS_URL": "www.notyetimplemented.com",
-        "ConnectionStrings__WebPushAppConecction": "Server=(localdb)\\mssqllocaldb;Database=WebPushNotificationApp.Mvc;Trusted_Connection=True;MultipleActiveResultSets=true"
+        "SMS_URL": "www.notyetimplemented.com"
+      },
+      "ConnectionStrings": {
+        "SecretManagementServiceContext": "Server=(localdb)\\mssqllocaldb;Database=SecretManagementService;Trusted_Connection=True;"
       }
     }
   }
