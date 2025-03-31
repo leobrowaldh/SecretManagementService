@@ -7,5 +7,5 @@ using System.Threading.Tasks;
 namespace SecretManagementService.Services;
 public interface ISmsService
 {
-
+    public Task SendSmsAsync(string phoneNumber, string message);
 }

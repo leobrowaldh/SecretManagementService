@@ -28,6 +28,7 @@ builder.Services.AddScoped<ISecretsService, SecretsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IDbService, DbServiceMock>(); //***Mocking***
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ISmsService, SmsService>();
 
 builder.Services.AddHttpClient(name: "AzureAuth",
     configureClient: options =>
