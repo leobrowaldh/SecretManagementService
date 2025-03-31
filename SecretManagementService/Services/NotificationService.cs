@@ -51,6 +51,7 @@ public class NotificationService : INotificationService
         }
         if (secretNotificationInfo.ContactMethod.IsSMS)
         {
+            _logger.LogInformation("SMS Notification Service is currently Disabled, upgraded Twilio account is required.");
             //Cannot verify swedish numbers by sms, and cannot verify by voicecall in free acounts.
             //So we need to upgrade account to test this.
 
