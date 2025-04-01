@@ -6,5 +6,7 @@
   },
   "ConnectionStrings": {
     "SecretManagementServiceContext": "Server=(localdb)\\mssqllocaldb;Database=SecretManagementService;Trusted_Connection=True;"
-  }
+  },
+  "KEY_VAULT_URI": "https://sms-appsecrets.vault.azure.net/",
+  "ENVIRONMENT": "Local"
 }

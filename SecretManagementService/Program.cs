@@ -12,10 +12,11 @@ using SendGrid.Extensions.DependencyInjection;
 using SendGrid.Helpers.Mail;
 using Microsoft.EntityFrameworkCore;
 using Db;
+using SharedResources.ExtensionMethods;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
-ConfigureKeyVault(builder);
+builder.Configuration.ConfigureKeyVault();
 
 builder.ConfigureFunctionsWebApplication();
 
@@ -67,38 +68,3 @@ builder.Services.AddDbContext<SmsDbContext>(options =>
 builder.Build().Run();
 
 
-
-
-static void ConfigureKeyVault(FunctionsApplicationBuilder builder)
-{
-    // Fetch the Key Vault URI from environment variables or local.settings.json
-    var keyVaultUri = builder.Configuration["KEY_VAULT_URI"]
-        ?? throw new ArgumentNullException("KEY_VAULT_URI not found in configuration");
-
-    var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-        ?? throw new ArgumentNullException("ASPNETCORE_ENVIRONMENT not found in configuration");
-
-    var excludeLocalDevelopment = (environment is not null && environment != "Local");
-    var excludeManagedIdentity = !excludeLocalDevelopment;
-
-    if (!string.IsNullOrEmpty(keyVaultUri))
-    {
-        // Add Azure Key Vault to the IConfiguration pipeline,
-        // excluding unneccesary credential sources for performance.
-        builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri),
-            new DefaultAzureCredential(
-                new DefaultAzureCredentialOptions()
-                {
-                    ExcludeAzureCliCredential = true,
-                    ExcludeAzureDeveloperCliCredential = true,
-                    ExcludeAzurePowerShellCredential = true,
-                    ExcludeEnvironmentCredential = true,
-                    ExcludeInteractiveBrowserCredential = true,
-                    ExcludeManagedIdentityCredential = excludeManagedIdentity,
-                    ExcludeSharedTokenCacheCredential = true,
-                    ExcludeVisualStudioCodeCredential = excludeLocalDevelopment,
-                    ExcludeVisualStudioCredential = excludeLocalDevelopment,
-                    ExcludeWorkloadIdentityCredential = true,
-                }));
-    }
-}

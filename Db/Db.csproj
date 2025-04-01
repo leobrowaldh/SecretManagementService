@@ -22,4 +22,8 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SharedResources\SharedResources.csproj" />
+  </ItemGroup>
+
 </Project>
