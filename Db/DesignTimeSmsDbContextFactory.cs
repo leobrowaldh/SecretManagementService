@@ -19,31 +19,9 @@ public class DesignTimeSmsDbContextFactory : IDesignTimeDbContextFactory<SmsDbCo
             .AddJsonFile("local.settings.json", optional: false, reloadOnChange: true)
             .AddEnvironmentVariables();
 
-
-        //***DEBUG
+        builder.ConfigureKeyVault();
 
         var configuration = builder.Build();
-
-        Console.WriteLine("Configuration Variables:");
-        foreach (var kvp in configuration.AsEnumerable())
-        {
-            Console.WriteLine($"{kvp.Key}: {kvp.Value}");
-        }
-        //***
-
-        var environment = configuration["ENVIRONMENT"];
-        Console.WriteLine($"Environment: {environment}");
-
-        try
-        {
-            builder.ConfigureKeyVault();
-        }
-        catch (ArgumentNullException ex)
-        {
-            Console.WriteLine($"Configuration variable missing:\n{ex.Message}");
-        }
-
-        configuration = builder.Build();
 
         var connectionString = configuration.GetConnectionString("SecretManagementServiceContext")
                                ?? Environment.GetEnvironmentVariable("SecretManagementServiceContext");
