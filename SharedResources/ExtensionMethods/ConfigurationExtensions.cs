@@ -6,9 +6,13 @@ namespace SharedResources.ExtensionMethods;
 
 public static class ConfigurationExtensions
 {
-    public static void ConfigureKeyVault(this IConfigurationBuilder builder)
+    public static IConfigurationBuilder ConfigureKeyVault(this IConfigurationBuilder builder)
     {
-        var configuration = builder.Build();
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables()
+            .Build();
 
         var keyVaultUri = configuration["KEY_VAULT_URI"]
             ?? throw new ArgumentNullException("KEY_VAULT_URI not found in configuration");
@@ -39,6 +43,8 @@ public static class ConfigurationExtensions
                         ExcludeWorkloadIdentityCredential = true,
                     }));
         }
+
+        return builder;
     }
 }
 

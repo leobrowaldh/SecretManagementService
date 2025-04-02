@@ -14,12 +14,7 @@ public class DesignTimeSmsDbContextFactory : IDesignTimeDbContextFactory<SmsDbCo
     public SmsDbContext CreateDbContext(string[] args)
     {
 
-        var builder = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("local.settings.json", optional: false, reloadOnChange: true)
-            .AddEnvironmentVariables();
-
-        builder.ConfigureKeyVault();
+        var builder = new ConfigurationBuilder().ConfigureKeyVault();
 
         var configuration = builder.Build();
 
