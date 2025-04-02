@@ -9,7 +9,7 @@ public static class ConfigurationExtensions
     public static IConfigurationBuilder ConfigureKeyVault(this IConfigurationBuilder builder)
     {
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "SecretManagementService"))
             .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables()
             .Build();

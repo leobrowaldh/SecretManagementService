@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Db.Migrations
 {
     [DbContext(typeof(SmsDbContext))]
-    [Migration("20250401134702_initial-create")]
+    [Migration("20250402073427_initial-create")]
     partial class initialcreate
     {
         /// <inheritdoc />
