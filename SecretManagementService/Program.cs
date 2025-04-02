@@ -1,18 +1,17 @@
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Net.Http.Headers;
 using SecretManagementService.Services;
 using Microsoft.Azure.Functions.Worker;
 using SecretManagementService.Mocks;
-using SendGrid;
 using SendGrid.Extensions.DependencyInjection;
-using SendGrid.Helpers.Mail;
 using Microsoft.EntityFrameworkCore;
 using Db;
 using SharedResources.ExtensionMethods;
+using Db.Repositories;
+using Db.DbModels;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -29,9 +28,16 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGraphApiService, GraphApiService>();
 builder.Services.AddScoped<ISecretsService, SecretsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IDbService, DbServiceMock>(); //***Mocking***
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISmsService, SmsService>();
+builder.Services.AddScoped<IDbService, DbServiceMock>(); //***Mocking***
+
+builder.Services.AddScoped<IGenericRepository<Secret>, SecretRepository>();
+builder.Services.AddScoped<IGenericRepository<Application>, ApplicationRepository>();
+builder.Services.AddScoped<IGenericRepository<Subscriber>, SubscriberRepository>();
+builder.Services.AddScoped<IGenericRepository<ApiEndpoint>, ApiEndpointRepository>();
+builder.Services.AddScoped<IGenericRepository<Email>, EmailRepository>();
+builder.Services.AddScoped<IGenericRepository<Phone>, PhoneRepository>();
 
 builder.Services.AddHttpClient(name: "AzureAuth",
     configureClient: options =>
