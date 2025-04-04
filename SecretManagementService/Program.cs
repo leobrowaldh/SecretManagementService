@@ -24,7 +24,7 @@ builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
 
-builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAzureTokenService, AzureTokenService>();
 builder.Services.AddScoped<IGraphApiService, GraphApiService>();
 builder.Services.AddScoped<ISecretsService, SecretsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();

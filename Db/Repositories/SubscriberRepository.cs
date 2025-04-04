@@ -12,4 +12,6 @@ public class SubscriberRepository : GenericRepository<Subscriber>
 {
     public SubscriberRepository(SmsDbContext dbContext) : base(dbContext) { }
 
+    protected override IQueryable<Subscriber> ApplyCustomFilter(IQueryable<Subscriber> query, bool seeded, string filter)
+        => query.Where(a => a.Seeded == seeded);
 }

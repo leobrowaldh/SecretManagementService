@@ -11,5 +11,6 @@ public class Email
     public Guid EmailId { get; set; }
     [EmailAddress]
     public string EmailAddress { get; set; }
+    public bool Seeded { get; set; }
     public List<Secret> Secrets { get; set; } = [];
 }

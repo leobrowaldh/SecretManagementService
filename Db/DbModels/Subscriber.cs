@@ -9,6 +9,7 @@ public class Subscriber
 {
     public Guid SubscriberId { get; set; }
     public String? MicrosoftGraphOwnerId { get; set; }
+    public bool Seeded { get; set; }
 
     public List<Application> Applications { get; set; } = [];
     public List<Secret> Secrets { get; set; } = [];

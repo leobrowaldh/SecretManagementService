@@ -16,7 +16,7 @@ public class EmailRepository : GenericRepository<Email>
     {
         if (!string.IsNullOrWhiteSpace(filter))
         {
-            return query.Where(s => s.EmailAddress.ToLower().Contains(filter));
+            return query.Where(s => s.EmailAddress.ToLower().Contains(filter) && s.Seeded == seeded);
         }
         return query;
     }

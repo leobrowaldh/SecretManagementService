@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SecretManagementService.Services;
 
-public interface ITokenService
+public interface IAzureTokenService
 {
     public Task<string> GetAccessTokenAsync();
 }

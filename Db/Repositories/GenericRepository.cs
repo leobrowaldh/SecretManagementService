@@ -16,7 +16,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         _dbSet = _dbContext.Set<T>();
     }
 
-    public virtual async Task<ResponsePageDto<T>> ReadItemsAsync(bool seeded, bool flat, string filter, int pageNumber, int pageSize)
+    public virtual async Task<ResponsePageDto<T>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false)
     {
         filter ??= "";
         filter = filter.ToLower();

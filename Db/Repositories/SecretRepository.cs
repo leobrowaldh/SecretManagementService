@@ -16,7 +16,7 @@ public class SecretRepository : GenericRepository<Secret>
     {
         if (!string.IsNullOrWhiteSpace(filter))
         {
-            return query.Where(s => s.DisplayName.ToLower().Contains(filter));
+            return query.Where(s => s.DisplayName.ToLower().Contains(filter) && s.Seeded == seeded);
         }
         return query;
     }

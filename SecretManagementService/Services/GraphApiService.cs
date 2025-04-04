@@ -15,11 +15,11 @@ namespace SecretManagementService.Services;
 public class GraphApiService: IGraphApiService
 {
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ITokenService _tokenService;
+    private readonly IAzureTokenService _tokenService;
     private readonly ILogger<GraphApiService> _logger;
     public GraphApiService(
         IHttpClientFactory httpClientFactory,
-        ITokenService tokenService,
+        IAzureTokenService tokenService,
         ILogger<GraphApiService> logger)
     {
         _httpClientFactory = httpClientFactory;

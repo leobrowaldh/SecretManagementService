@@ -26,4 +26,8 @@
     <ProjectReference Include="..\SharedResources\SharedResources.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="SqlScripts\" />
+  </ItemGroup>
+
 </Project>

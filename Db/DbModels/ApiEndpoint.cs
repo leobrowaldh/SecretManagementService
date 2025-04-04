@@ -29,6 +29,7 @@ public class ApiEndpoint
         set {}
     }
     public string? BodyTemplate { get; init; } // Optional JSON/XML template for body payload
+    public bool Seeded { get; set; }
 
     public Secret? Secret { get; set; }
 }

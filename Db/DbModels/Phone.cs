@@ -11,5 +11,6 @@ public class Phone
     public Guid PhoneId { get; set; }
     [Phone]
     public string PhoneNumber { get; set; }
+    public bool Seeded { get; set; }
     public List<Secret> Secrets { get; set; } = [];
 }

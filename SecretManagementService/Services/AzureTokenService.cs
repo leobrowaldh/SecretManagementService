@@ -5,15 +5,15 @@ using System.Text.Json;
 
 namespace SecretManagementService.Services;
 
-public class TokenService : ITokenService
+public class AzureTokenService : IAzureTokenService
 {
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<TokenService> _logger;
+    private readonly ILogger<AzureTokenService> _logger;
     private readonly string _tenantId;
     private readonly string _clientId;
     private readonly string _clientSecret;
 
-    public TokenService(IConfiguration configuration, IHttpClientFactory httpClientFactory, ILogger<TokenService> logger)
+    public AzureTokenService(IConfiguration configuration, IHttpClientFactory httpClientFactory, ILogger<AzureTokenService> logger)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;

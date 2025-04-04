@@ -16,7 +16,7 @@ public class PhoneRepository : GenericRepository<Phone>
     {
         if (!string.IsNullOrWhiteSpace(filter))
         {
-            return query.Where(s => s.PhoneNumber.ToLower().Contains(filter));
+            return query.Where(s => s.PhoneNumber.ToLower().Contains(filter) && s.Seeded == seeded);
         }
         return query;
     }

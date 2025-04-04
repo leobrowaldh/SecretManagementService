@@ -9,9 +9,9 @@ namespace SecretManagementService.Functions;
 public class TestFunction
 {
     private readonly ILogger<TestFunction> _logger;
-    private readonly ITokenService _tokenService;
+    private readonly IAzureTokenService _tokenService;
 
-    public TestFunction(ILogger<TestFunction> logger, ITokenService tokenService)
+    public TestFunction(ILogger<TestFunction> logger, IAzureTokenService tokenService)
     {
         _logger = logger;
         _tokenService = tokenService;

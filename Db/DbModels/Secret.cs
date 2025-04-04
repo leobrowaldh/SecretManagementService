@@ -15,6 +15,7 @@ public class Secret
     public bool ContactByEmail { get; set; }
     public bool ContactBySMS { get; set; }
     public bool ContactByApiEndpoint { get; set; }
+    public bool Seeded { get; set; }
 
     public Application? Application { get; set; }
     public Subscriber Subscriber { get; set; }

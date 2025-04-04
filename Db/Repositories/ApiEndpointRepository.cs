@@ -16,7 +16,7 @@ public class ApiEndpointRepository : GenericRepository<ApiEndpoint>
     {
         if (!string.IsNullOrWhiteSpace(filter))
         {
-            return query.Where(s => s.BaseUrl.ToLower().Contains(filter));
+            return query.Where(s => s.BaseUrl.ToLower().Contains(filter) && s.Seeded == seeded);
         }
         return query;
     }
