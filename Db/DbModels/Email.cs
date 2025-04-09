@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Db.DbModels;
+
+[Table("Emails", Schema = "suprusr")]
 public class Email
 {
     public Guid EmailId { get; set; }

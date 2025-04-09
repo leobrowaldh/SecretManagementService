@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Db.DbModels;
+
+[Table("Secrets", Schema = "usr")]
 public class Secret
 {
     public Guid SecretId { get; set; }

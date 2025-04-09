@@ -21,4 +21,20 @@ public class SmsDbContext: DbContext
     public DbSet<ApiEndpoint> ApiEndpoints { get; set; }
     public DbSet<Application> Applications { get; set; }
     public DbSet<Secret> Secrets { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Secret>()
+            .HasMany(s => s.Emails)
+            .WithMany(e => e.Secrets)
+            .UsingEntity(j => j.ToTable("EmailSecret", "suprusr"));
+
+        modelBuilder.Entity<Secret>()
+            .HasMany(s => s.Phones)
+            .WithMany(e => e.Secrets)
+            .UsingEntity(j => j.ToTable("PhoneSecret", "suprusr"));
+    }
+
 }

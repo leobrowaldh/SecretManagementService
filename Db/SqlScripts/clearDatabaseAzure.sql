@@ -1,51 +1,43 @@
---USE zooefc;
---GO
 
--- remove spLogin
-DROP PROCEDURE IF EXISTS gstusr.spLogin
-GO
 
 -- remove roles
-ALTER ROLE efcGstUsr DROP MEMBER gstusrUser;
-ALTER ROLE efcGstUsr DROP MEMBER usrUser;
-ALTER ROLE efcGstUsr DROP MEMBER supusrUser;
 
-ALTER ROLE efcUsr DROP MEMBER usrUser;
-ALTER ROLE efcUsr DROP MEMBER supusrUser;
+ALTER ROLE ExternalAdminRole DROP MEMBER [SecretManagement_ExternalAdministrators];
+ALTER ROLE UserRole DROP MEMBER [SecretManagement_Users];
+ALTER ROLE AppRole DROP MEMBER [SecretManagementService-FunctionApp];
 
-ALTER ROLE efcSupUsr DROP MEMBER supusrUser;
 
-DROP ROLE IF EXISTS efcGstUsr;
-DROP ROLE IF EXISTS efcUsr;
-DROP ROLE IF EXISTS efcSupUsr;
+DROP ROLE IF EXISTS ExternalAdminRole;
+DROP ROLE IF EXISTS UserRole;
+DROP ROLE IF EXISTS AppRole;
 GO
 
 --drop users
-DROP USER IF EXISTS  gstusrUser;
-DROP USER IF EXISTS usrUser;
-DROP USER IF EXISTS supusrUser;
+DROP USER IF EXISTS  [SecretManagement_ExternalAdministrators];
+DROP USER IF EXISTS [SecretManagement_Users];
+DROP USER IF EXISTS [SecretManagementService-FunctionApp];
 GO
 
--- remove spDeleteAll
-DROP PROCEDURE IF EXISTS supusr.spDeleteAll
-GO
-
-DROP VIEW IF EXISTS [gstusr].[vwInfoDb]
-DROP VIEW IF EXISTS [gstusr].[vwInfoZoos]
-DROP VIEW IF EXISTS [gstusr].[vwInfoAnimals]
-DROP VIEW IF EXISTS [gstusr].[vwInfoEmployees]
+--drop functions
+DROP FUNCTION IF EXISTS rls.fn_subscriber_filter;
+DROP FUNCTION IF EXISTS rls.fn_secret_filter;
 GO
 
 --drop tables in the right order not to get fk conflicts
-DROP TABLE IF EXISTS supusr.Comments;
-DROP TABLE IF EXISTS supusr.Banks;
-DROP TABLE IF EXISTS supusr.Attractions;
-DROP TABLE IF EXISTS supusr.Addresses;
+DROP TABLE IF EXISTS suprusr.ApiEndpoints;
+DROP TABLE IF EXISTS suprusr.PhoneSecret;
+DROP TABLE IF EXISTS suprusr.EmailSecret;
+DROP TABLE IF EXISTS suprusr.Phones;
+DROP TABLE IF EXISTS suprusr.Emails;
+DROP TABLE IF EXISTS usr.Secrets;
+DROP TABLE IF EXISTS suprusr.Applications;
+DROP TABLE IF EXISTS suprusr.Subscribers;
 DROP TABLE IF EXISTS dbo.__EFMigrationsHistory;
 GO
 
+
 -- drop schemas
-DROP SCHEMA IF EXISTS gstusr;
+DROP SCHEMA IF EXISTS rls;
 DROP SCHEMA IF EXISTS usr;
-DROP SCHEMA IF EXISTS supusr;
+DROP SCHEMA IF EXISTS suprusr;
 GO

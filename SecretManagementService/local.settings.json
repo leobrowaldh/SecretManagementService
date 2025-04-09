@@ -5,7 +5,7 @@
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
   },
   "ConnectionStrings": {
-    "SecretManagementServiceContext": "Server=(localdb)\\mssqllocaldb;Database=SecretManagementService;Trusted_Connection=True;"
+    "SecretManagementServiceContext": "Server=tcp:sms-sql-database-dev.database.windows.net,1433;Initial Catalog=sms-db-dev;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication=Active Directory Default;Column Encryption Setting=Enabled;"
   },
   "KEY_VAULT_URI": "https://sms-appsecrets.vault.azure.net/",
   "ENVIRONMENT": "Local"

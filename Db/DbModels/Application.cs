@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Db.DbModels;
+
+[Table("Applications", Schema = "suprusr")]
 public class Application
 {
     public Guid ApplicationId { get; set; }

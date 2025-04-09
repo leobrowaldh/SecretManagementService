@@ -1,17 +1,24 @@
 
+-- *** DO THIS BEFORE RUNNING THE MIGRATIONS TO THE DATABASE! ***
+
 --Create schemas:
---for the regular user
+
+CREATE SCHEMA rls;
+GO
+
 CREATE SCHEMA usr;
 GO
 
---for external administrators
 CREATE SCHEMA suprusr;
 GO
+
+-- ***                                                         ***
+
 
 -- Create users mapped to Entra ID groups (replace with actual Entra group names)
 CREATE USER [SecretManagement_ExternalAdministrators] FROM EXTERNAL PROVIDER;
 CREATE USER [SecretManagement_Users] FROM EXTERNAL PROVIDER;
-CREATE USER [SecretManagement_FunctionApp] FROM EXTERNAL PROVIDER;
+CREATE USER [SecretManagementService-FunctionApp] FROM EXTERNAL PROVIDER;
 
 --create roles
 CREATE ROLE ExternalAdminRole;
@@ -21,7 +28,7 @@ CREATE ROLE AppRole;
 --Assign Entra-based users to roles
 ALTER ROLE ExternalAdminRole ADD MEMBER [SecretManagement_ExternalAdministrators];
 ALTER ROLE UserRole ADD MEMBER [SecretManagement_Users];
-ALTER ROLE AppRole ADD MEMBER [SecretManagement_FunctionApp];
+ALTER ROLE AppRole ADD MEMBER [SecretManagementService-FunctionApp];
 GO
 
 --Assign Permissions to Roles:
@@ -39,7 +46,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON usr.Secrets TO UserRole;
 GO
 
 --Create Functions for RLS:
-CREATE FUNCTION Security.fn_subscriber_filter(@SubscriberId UNIQUEIDENTIFIER)
+
+CREATE FUNCTION rls.fn_subscriber_filter(@SubscriberId UNIQUEIDENTIFIER)
 RETURNS TABLE
 WITH SCHEMABINDING
 AS
@@ -48,16 +56,46 @@ RETURN
     WHERE @SubscriberId = CAST(SESSION_CONTEXT(N'SubscriberId') AS UNIQUEIDENTIFIER);
 GO
 
-CREATE FUNCTION Security.fn_secret_filter(@SecretId UNIQUEIDENTIFIER)
+CREATE FUNCTION rls.fn_api_filter(@SecretId UNIQUEIDENTIFIER)
 RETURNS TABLE
 WITH SCHEMABINDING
 AS
 RETURN 
-    SELECT 1 AS fn_secret_filter_result
+    SELECT 1 AS fn_api_filter_result
     WHERE EXISTS (
-        SELECT 1 
+        SELECT 1
         FROM usr.Secrets s
         WHERE s.SecretId = @SecretId
+          AND s.SubscriberId = CAST(SESSION_CONTEXT(N'SubscriberId') AS UNIQUEIDENTIFIER)
+    );
+GO
+
+CREATE FUNCTION rls.fn_email_filter(@EmailId  UNIQUEIDENTIFIER)
+RETURNS TABLE
+WITH SCHEMABINDING
+AS
+RETURN 
+    SELECT 1 AS fn_email_filter_result
+    WHERE EXISTS (
+        SELECT 1
+        FROM usr.Secrets s
+        INNER JOIN suprusr.EmailSecret es ON s.SecretId = es.SecretsSecretId
+        WHERE es.EmailsEmailId = @EmailId
+          AND s.SubscriberId = CAST(SESSION_CONTEXT(N'SubscriberId') AS UNIQUEIDENTIFIER)
+    );
+GO
+
+CREATE FUNCTION rls.fn_phone_filter(@PhoneId  UNIQUEIDENTIFIER)
+RETURNS TABLE
+WITH SCHEMABINDING
+AS
+RETURN 
+    SELECT 1 AS fn_phone_filter_result
+    WHERE EXISTS (
+        SELECT 1
+        FROM usr.Secrets s
+        INNER JOIN suprusr.PhoneSecret ps ON s.SecretId = ps.SecretsSecretId
+        WHERE ps.PhonesPhoneId = @PhoneId
           AND s.SubscriberId = CAST(SESSION_CONTEXT(N'SubscriberId') AS UNIQUEIDENTIFIER)
     );
 GO
@@ -65,19 +103,20 @@ GO
 
 
 
+
 --Create and apply Security Policies for RLS:
 CREATE SECURITY POLICY SubscriberSecurityPolicy
-ADD FILTER PREDICATE Security.fn_subscriber_filter(SubscriberId)
+ADD FILTER PREDICATE rls.fn_subscriber_filter(SubscriberId)
     ON usr.Secrets,
-ADD FILTER PREDICATE Security.fn_subscriber_filter(SubscriberId)
+ADD FILTER PREDICATE rls.fn_subscriber_filter(SubscriberId)
     ON suprusr.Applications,
-ADD FILTER PREDICATE Security.fn_subscriber_filter(SubscriberId)
+ADD FILTER PREDICATE rls.fn_subscriber_filter(SubscriberId)
     ON suprusr.Subscribers,
-ADD FILTER PREDICATE Security.fn_secret_filter(SecretId)
+ADD FILTER PREDICATE rls.fn_phone_filter(PhoneId)
     ON suprusr.Phones,
-ADD FILTER PREDICATE Security.fn_secret_filter(SecretId)
+ADD FILTER PREDICATE rls.fn_email_filter(EmailId)
     ON suprusr.Emails,
-ADD FILTER PREDICATE Security.fn_secret_filter(SecretId)
+ADD FILTER PREDICATE rls.fn_api_filter(SecretId)
     ON suprusr.ApiEndpoints
 WITH (STATE = ON);
 GO

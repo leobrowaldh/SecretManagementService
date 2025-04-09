@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Db.Migrations
 {
     [DbContext(typeof(SmsDbContext))]
-    [Migration("20250402073427_initial-create")]
-    partial class initialcreate
+    [Migration("20250409122951_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -52,6 +52,9 @@ namespace Db.Migrations
                     b.Property<Guid?>("SecretId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("Seeded")
+                        .HasColumnType("bit");
+
                     b.Property<string>("StrHttpMethod")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -60,7 +63,7 @@ namespace Db.Migrations
 
                     b.HasIndex("SecretId");
 
-                    b.ToTable("ApiEndpoints");
+                    b.ToTable("ApiEndpoints", "suprusr");
                 });
 
             modelBuilder.Entity("Db.DbModels.Application", b =>
@@ -73,6 +76,9 @@ namespace Db.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Seeded")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("SubscriberId")
                         .HasColumnType("uniqueidentifier");
 
@@ -80,7 +86,7 @@ namespace Db.Migrations
 
                     b.HasIndex("SubscriberId");
 
-                    b.ToTable("Applications");
+                    b.ToTable("Applications", "suprusr");
                 });
 
             modelBuilder.Entity("Db.DbModels.Email", b =>
@@ -93,9 +99,12 @@ namespace Db.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Seeded")
+                        .HasColumnType("bit");
+
                     b.HasKey("EmailId");
 
-                    b.ToTable("Emails");
+                    b.ToTable("Emails", "suprusr");
                 });
 
             modelBuilder.Entity("Db.DbModels.Phone", b =>
@@ -108,9 +117,12 @@ namespace Db.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Seeded")
+                        .HasColumnType("bit");
+
                     b.HasKey("PhoneId");
 
-                    b.ToTable("Phones");
+                    b.ToTable("Phones", "suprusr");
                 });
 
             modelBuilder.Entity("Db.DbModels.Secret", b =>
@@ -144,6 +156,9 @@ namespace Db.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Seeded")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("SubscriberId")
                         .HasColumnType("uniqueidentifier");
 
@@ -153,7 +168,7 @@ namespace Db.Migrations
 
                     b.HasIndex("SubscriberId");
 
-                    b.ToTable("Secrets");
+                    b.ToTable("Secrets", "usr");
                 });
 
             modelBuilder.Entity("Db.DbModels.Subscriber", b =>
@@ -165,9 +180,12 @@ namespace Db.Migrations
                     b.Property<string>("MicrosoftGraphOwnerId")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Seeded")
+                        .HasColumnType("bit");
+
                     b.HasKey("SubscriberId");
 
-                    b.ToTable("Subscribers");
+                    b.ToTable("Subscribers", "suprusr");
                 });
 
             modelBuilder.Entity("EmailSecret", b =>
@@ -182,7 +200,7 @@ namespace Db.Migrations
 
                     b.HasIndex("SecretsSecretId");
 
-                    b.ToTable("EmailSecret");
+                    b.ToTable("EmailSecret", "suprusr");
                 });
 
             modelBuilder.Entity("PhoneSecret", b =>
@@ -197,7 +215,7 @@ namespace Db.Migrations
 
                     b.HasIndex("SecretsSecretId");
 
-                    b.ToTable("PhoneSecret");
+                    b.ToTable("PhoneSecret", "suprusr");
                 });
 
             modelBuilder.Entity("Db.DbModels.ApiEndpoint", b =>

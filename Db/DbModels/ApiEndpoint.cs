@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ public enum EnHttpMethod
     Patch,
     Delete
 }
+
+[Table("ApiEndpoints", Schema = "suprusr")]
 public class ApiEndpoint
 {
     public Guid ApiEndpointId { get; set; }
