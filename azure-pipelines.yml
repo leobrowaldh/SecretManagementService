@@ -72,33 +72,7 @@ stages:
   condition: succeeded()
 
   jobs:
-
-  - job: SetEnvironmentVariables
-    displayName: "Extract and Set Environment Variables"
-    steps:
-      # Install jq for Linux-based deploy machine
-      - script: |
-          if ! command -v jq &> /dev/null; then
-            echo "jq not found. Installing jq..."
-            sudo apt-get update
-            sudo apt-get install -y jq
-          fi
-        displayName: "Install jq on Linux Deploy Machine"
-
-      # Checking the directory structure
-      - script: |
-          echo "Directory structure:"
-          ls $(System.DefaultWorkingDirectory)
-          ls $(System.DefaultWorkingDirectory)/Scripts
-        displayName: "Verify Directory Structure"
-
-
-      # Run the environment variable extraction script
-      - script: |
-          chmod +x $(System.DefaultWorkingDirectory)/Scripts/export-env-vars.sh
-          $(System.DefaultWorkingDirectory)/Scripts/export-env-vars.sh
-        displayName: "Extract Environment Variables"
-
+  
   - deployment: Deploy
     displayName: Deploy
     environment: 'development'
