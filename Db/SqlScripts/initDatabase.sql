@@ -11,14 +11,17 @@ GO
 -- Create users mapped to Entra ID groups (replace with actual Entra group names)
 CREATE USER [SecretManagement_ExternalAdministrators] FROM EXTERNAL PROVIDER;
 CREATE USER [SecretManagement_Users] FROM EXTERNAL PROVIDER;
+CREATE USER [SecretManagement_FunctionApp] FROM EXTERNAL PROVIDER;
 
 --create roles
 CREATE ROLE ExternalAdminRole;
 CREATE ROLE UserRole;
+CREATE ROLE AppRole;
 
 --Assign Entra-based users to roles
 ALTER ROLE ExternalAdminRole ADD MEMBER [SecretManagement_ExternalAdministrators];
 ALTER ROLE UserRole ADD MEMBER [SecretManagement_Users];
+ALTER ROLE AppRole ADD MEMBER [SecretManagement_FunctionApp];
 GO
 
 --Assign Permissions to Roles:
@@ -26,6 +29,10 @@ GO
 -- External Admins get full access only within RLS constraints
 GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::suprusr TO ExternalAdminRole;
 GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::usr TO ExternalAdminRole;
+
+--Function app read contact info and update notification Dates
+GRANT SELECT, UPDATE ON SCHEMA::usr TO AppRole;
+GRANT SELECT ON SCHEMA::suprusr TO AppRole;
 
 -- Users only manage secrets within RLS constraints
 GRANT SELECT, INSERT, UPDATE, DELETE ON usr.Secrets TO UserRole;
