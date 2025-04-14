@@ -5,6 +5,7 @@
 ALTER ROLE ExternalAdminRole DROP MEMBER [SecretManagement_ExternalAdministrators];
 ALTER ROLE UserRole DROP MEMBER [SecretManagement_Users];
 ALTER ROLE AppRole DROP MEMBER [SecretManagementService-FunctionApp];
+ALTER ROLE db_securityadmin DROP MEMBER [leo.browaldh@innofactor.com];
 
 
 DROP ROLE IF EXISTS ExternalAdminRole;
@@ -16,11 +17,18 @@ GO
 DROP USER IF EXISTS  [SecretManagement_ExternalAdministrators];
 DROP USER IF EXISTS [SecretManagement_Users];
 DROP USER IF EXISTS [SecretManagementService-FunctionApp];
+DROP USER IF EXISTS [leo.browaldh@innofactor.com];
+GO
+
+-- Drop RLS policies
+DROP SECURITY POLICY IF EXISTS SubscriberSecurityPolicy;
 GO
 
 --drop functions
 DROP FUNCTION IF EXISTS rls.fn_subscriber_filter;
-DROP FUNCTION IF EXISTS rls.fn_secret_filter;
+DROP FUNCTION IF EXISTS rls.fn_api_filter;
+DROP FUNCTION IF EXISTS rls.fn_phone_filter;
+DROP FUNCTION IF EXISTS rls.fn_email_filter;
 GO
 
 --drop tables in the right order not to get fk conflicts

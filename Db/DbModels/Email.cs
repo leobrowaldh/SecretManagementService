@@ -12,6 +12,8 @@ namespace Db.DbModels;
 public class Email
 {
     public Guid EmailId { get; set; }
+    [Required]
+    [MaxLength(320)]
     [EmailAddress]
     public string EmailAddress { get; set; }
     public bool Seeded { get; set; }

@@ -12,6 +12,8 @@ namespace Db.DbModels;
 public class Phone
 {
     public Guid PhoneId { get; set; }
+    [Required]
+    [MaxLength(30)]
     [Phone]
     public string PhoneNumber { get; set; }
     public bool Seeded { get; set; }
