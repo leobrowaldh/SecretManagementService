@@ -16,14 +16,12 @@ public class FetchExpiringSecrets
 {
     private readonly ILogger _logger;
     private readonly ISecretsService _secretsService;
-    private readonly IConfiguration _configuration;
     private readonly int _daysUntilSecretsExpire;
 
     public FetchExpiringSecrets(ILogger<FetchExpiringSecrets> logger, ISecretsService secretsService, IConfiguration configuration)
     {
         _logger = logger;
         _secretsService = secretsService;
-        _configuration = configuration;
         _daysUntilSecretsExpire = configuration.GetValue<int>("DAYS_UNTIL_SECRET_EXPIRES");
     }
 
