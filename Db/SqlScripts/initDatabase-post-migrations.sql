@@ -1,19 +1,4 @@
 
--- *** DO THIS BEFORE RUNNING THE MIGRATIONS TO THE DATABASE! ***
-
---Create schemas:
-
-CREATE SCHEMA rls;
-GO
-
-CREATE SCHEMA usr;
-GO
-
-CREATE SCHEMA suprusr;
-GO
-
--- ***                                                         ***
-
 
 -- Create users mapped to Entra ID groups (replace with actual Entra group names)
 CREATE USER [SecretManagement_ExternalAdministrators] FROM EXTERNAL PROVIDER;

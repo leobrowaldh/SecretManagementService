@@ -1,0 +1,10 @@
+
+CREATE SCHEMA rls;
+GO
+
+CREATE SCHEMA usr;
+GO
+
+CREATE SCHEMA suprusr;
+GO
+
