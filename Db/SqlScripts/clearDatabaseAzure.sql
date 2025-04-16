@@ -2,18 +2,20 @@
 
 -- remove roles
 
+ALTER ROLE InternalAdminRole DROP MEMBER [SecretManagement_InternalAdministrators];
 ALTER ROLE ExternalAdminRole DROP MEMBER [SecretManagement_ExternalAdministrators];
 ALTER ROLE UserRole DROP MEMBER [SecretManagement_Users];
 ALTER ROLE AppRole DROP MEMBER [SecretManagementService-FunctionApp];
 ALTER ROLE db_securityadmin DROP MEMBER [leo.browaldh@innofactor.com];
 
-
+DROP ROLE IF EXISTS InternalAdminRole;
 DROP ROLE IF EXISTS ExternalAdminRole;
 DROP ROLE IF EXISTS UserRole;
 DROP ROLE IF EXISTS AppRole;
 GO
 
 --drop users
+DROP USER IF EXISTS  [SecretManagement_InternalAdministrators];
 DROP USER IF EXISTS  [SecretManagement_ExternalAdministrators];
 DROP USER IF EXISTS [SecretManagement_Users];
 DROP USER IF EXISTS [SecretManagementService-FunctionApp];

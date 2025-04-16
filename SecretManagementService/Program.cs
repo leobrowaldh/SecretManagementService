@@ -39,6 +39,8 @@ builder.Services.AddScoped<IGenericRepository<ApiEndpoint>, ApiEndpointRepositor
 builder.Services.AddScoped<IGenericRepository<Email>, EmailRepository>();
 builder.Services.AddScoped<IGenericRepository<Phone>, PhoneRepository>();
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddHttpClient(name: "AzureAuth",
     configureClient: options =>
     {

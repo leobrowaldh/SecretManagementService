@@ -9,6 +9,10 @@ The resource to deploy is an azure SQL database with Transparent Data Encrypript
 This means that not only is the clients contact information encrypted at rest in the server with TDE, but also in transit, so that only the
 client can see it by using the master column key to decrypt the column keys for Emails and Phone numbers. Not even the database administrators
 can see the contact information of the clients, only those who have access to the Column Master Key can see the data.
+At the same time, Secure enclaves make it possible to do queries on the encrypted data! How? The enclave is an isolated part of memory
+that can decrypt the data, and do the queries in memory, and then encrypt the data again before sending it back to the database. This means that
+the data is never decrypted in the database, and only the enclave can see the data.
+
 
 Besides that the database has role based access with roles for the function app, the client users and the client external administrators. 
 All this is set to work with Azure Entra Id to authenticate users and applications.
@@ -52,3 +56,16 @@ Run the scripts in the following order:
 5. [encrypt the columns] (./SqlScripts/ColumnEncryption.sql)
 
 To person encrypting the columns of course need access to the column master key.
+
+
+# The Repositories:
+
+There are two kind of repositories to query the database:
+
+1. Entity framework core repositories: These are used for most queries and tables, they inherit from GenericRepository, that in turn implements IGenericRepository.
+   The ApplyCustomFilter method in the GenericRepository should be overridden in the derived classes to apply the custom filters for the specific table.
+   This way you can select on what columns the filtering should be applied.
+
+2. ADO.NET Repositories: These are used to query the tables that have encrypted columns, since Entity Framework Core is not yet supported for this. 
+   They directly implements IGenericRepository for their specific Table, utilizing the same EFC models used elsewhere, but querying with ADO.NET.
+

@@ -1,6 +1,7 @@
 
 
 -- Create users mapped to Entra ID groups (replace with actual Entra group names)
+CREATE USER [SecretManagement_InternalAdministrators] FROM EXTERNAL PROVIDER;
 CREATE USER [SecretManagement_ExternalAdministrators] FROM EXTERNAL PROVIDER;
 CREATE USER [SecretManagement_Users] FROM EXTERNAL PROVIDER;
 CREATE USER [SecretManagementService-FunctionApp] FROM EXTERNAL PROVIDER;
@@ -8,11 +9,13 @@ CREATE USER [leo.browaldh@innofactor.com] FROM EXTERNAL PROVIDER;
 
 
 --create roles
+CREATE ROLE InternalAdminRole; -- can see encrypted data, inmune to rls
 CREATE ROLE ExternalAdminRole;
 CREATE ROLE UserRole;
 CREATE ROLE AppRole;
 
 --Assign Entra-based users to roles
+ALTER ROLE InternalAdminRole ADD MEMBER [SecretManagement_InternalAdministrators];
 ALTER ROLE ExternalAdminRole ADD MEMBER [SecretManagement_ExternalAdministrators];
 ALTER ROLE UserRole ADD MEMBER [SecretManagement_Users];
 ALTER ROLE AppRole ADD MEMBER [SecretManagementService-FunctionApp];
@@ -20,6 +23,10 @@ ALTER ROLE db_securityadmin ADD MEMBER [leo.browaldh@innofactor.com];
 GO
 
 --Assign Permissions to Roles:
+
+-- Internal Admins get full access to everything
+GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::suprusr TO InternalAdminRole;
+GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::usr TO InternalAdminRole;
 
 -- External Admins get full access only within RLS constraints
 GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::suprusr TO ExternalAdminRole;
@@ -42,7 +49,7 @@ AS
 RETURN 
     SELECT 1 AS fn_subscriber_filter_result
     WHERE 
-    USER_NAME() = 'dbo' 
+    IS_MEMBER('InternalAdminRole') = 1
     OR @SubscriberId = CAST(SESSION_CONTEXT(N'SubscriberId') AS UNIQUEIDENTIFIER);
 GO
 
@@ -53,7 +60,7 @@ AS
 RETURN 
     SELECT 1 AS fn_api_filter_result
     WHERE
-    USER_NAME() = 'dbo' 
+    IS_MEMBER('InternalAdminRole') = 1
     OR EXISTS (
         SELECT 1
         FROM usr.Secrets s
@@ -69,7 +76,7 @@ AS
 RETURN 
     SELECT 1 AS fn_email_filter_result
     WHERE
-    USER_NAME() = 'dbo' 
+    IS_MEMBER('InternalAdminRole') = 1
     OR EXISTS (
         SELECT 1
         FROM usr.Secrets s
@@ -86,7 +93,7 @@ AS
 RETURN 
     SELECT 1 AS fn_phone_filter_result
     WHERE
-    USER_NAME() = 'dbo' 
+    IS_MEMBER('InternalAdminRole') = 1
     OR EXISTS (
         SELECT 1
         FROM usr.Secrets s

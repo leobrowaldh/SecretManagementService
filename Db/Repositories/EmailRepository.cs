@@ -2,17 +2,20 @@
 using Db.DbModels;
 using Db.Dtos;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Http;
 
 namespace Db.Repositories;
 
 public class EmailRepository : IGenericRepository<Email>
 {
     private readonly string _connectionString;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public EmailRepository(IConfiguration configuration)
+    public EmailRepository(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
     {
         _connectionString = configuration.GetConnectionString("SecretManagementServiceContext") ??
             throw new InvalidOperationException("no connection string found");
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<ResponsePageDto<Email>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false)
