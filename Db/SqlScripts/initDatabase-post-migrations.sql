@@ -1,25 +1,18 @@
 
 
--- Create users mapped to Entra ID groups (replace with actual Entra group names)
-CREATE USER [SecretManagement_InternalAdministrators] FROM EXTERNAL PROVIDER;
-CREATE USER [SecretManagement_ExternalAdministrators] FROM EXTERNAL PROVIDER;
-CREATE USER [SecretManagement_Users] FROM EXTERNAL PROVIDER;
-CREATE USER [SecretManagementService-FunctionApp] FROM EXTERNAL PROVIDER;
-CREATE USER [leo.browaldh@innofactor.com] FROM EXTERNAL PROVIDER;
-
+-- Create users mapped to Entra ID service principals
+CREATE USER [SecretManagementService-FunctionApp] FROM EXTERNAL PROVIDER;   -- Background notifications
+CREATE USER [SecretManagementService-Api] FROM EXTERNAL PROVIDER;                -- API backend
 
 --create roles
-CREATE ROLE InternalAdminRole; -- can see encrypted data, inmune to rls
+CREATE ROLE InternalAdminRole; -- inmune to rls
 CREATE ROLE ExternalAdminRole;
 CREATE ROLE UserRole;
-CREATE ROLE AppRole;
+CREATE ROLE NotificationFunctionAppRole; -- inmune to rls
 
---Assign Entra-based users to roles
-ALTER ROLE InternalAdminRole ADD MEMBER [SecretManagement_InternalAdministrators];
-ALTER ROLE ExternalAdminRole ADD MEMBER [SecretManagement_ExternalAdministrators];
-ALTER ROLE UserRole ADD MEMBER [SecretManagement_Users];
-ALTER ROLE AppRole ADD MEMBER [SecretManagementService-FunctionApp];
-ALTER ROLE db_securityadmin ADD MEMBER [leo.browaldh@innofactor.com];
+
+--Assign The static funciton app role
+ALTER ROLE NotificationFunctionAppRole ADD MEMBER [SecretManagementService-FunctionApp];
 GO
 
 --Assign Permissions to Roles:
@@ -32,13 +25,14 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::usr TO InternalAdminRole;
 GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::suprusr TO ExternalAdminRole;
 GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::usr TO ExternalAdminRole;
 
---Function app read contact info and update notification Dates
-GRANT SELECT, UPDATE ON SCHEMA::usr TO AppRole;
-GRANT SELECT ON SCHEMA::suprusr TO AppRole;
-
 -- Users only manage secrets within RLS constraints
 GRANT SELECT, INSERT, UPDATE, DELETE ON usr.Secrets TO UserRole;
+
+--Function app read contact info and update notification Dates
+GRANT SELECT, UPDATE ON SCHEMA::usr TO NotificationFunctionAppRole;
+GRANT SELECT ON SCHEMA::suprusr TO NotificationFunctionAppRole;
 GO
+
 
 --Create Functions for RLS:
 
@@ -47,9 +41,10 @@ RETURNS TABLE
 WITH SCHEMABINDING
 AS
 RETURN 
-    SELECT 1 AS fn_subscriber_filter_result
+    SELECT 1
     WHERE 
-    IS_MEMBER('InternalAdminRole') = 1
+    CHARINDEX('InternalAdminRole', SESSION_CONTEXT(N'UserRoles')) > 0
+    OR IS_MEMBER('db_owner') = 1
     OR @SubscriberId = CAST(SESSION_CONTEXT(N'SubscriberId') AS UNIQUEIDENTIFIER);
 GO
 
@@ -58,9 +53,10 @@ RETURNS TABLE
 WITH SCHEMABINDING
 AS
 RETURN 
-    SELECT 1 AS fn_api_filter_result
+    SELECT 1
     WHERE
-    IS_MEMBER('InternalAdminRole') = 1
+    CHARINDEX('InternalAdminRole', SESSION_CONTEXT(N'UserRoles')) > 0
+    OR IS_MEMBER('db_owner') = 1
     OR EXISTS (
         SELECT 1
         FROM usr.Secrets s
@@ -74,9 +70,10 @@ RETURNS TABLE
 WITH SCHEMABINDING
 AS
 RETURN 
-    SELECT 1 AS fn_email_filter_result
+    SELECT 1
     WHERE
-    IS_MEMBER('InternalAdminRole') = 1
+    CHARINDEX('InternalAdminRole', SESSION_CONTEXT(N'UserRoles')) > 0
+    OR IS_MEMBER('db_owner') = 1
     OR EXISTS (
         SELECT 1
         FROM usr.Secrets s
@@ -91,9 +88,10 @@ RETURNS TABLE
 WITH SCHEMABINDING
 AS
 RETURN 
-    SELECT 1 AS fn_phone_filter_result
+    SELECT 1
     WHERE
-    IS_MEMBER('InternalAdminRole') = 1
+    CHARINDEX('InternalAdminRole', SESSION_CONTEXT(N'UserRoles')) > 0
+    OR IS_MEMBER('db_owner') = 1
     OR EXISTS (
         SELECT 1
         FROM usr.Secrets s
@@ -102,6 +100,7 @@ RETURN
           AND s.SubscriberId = CAST(SESSION_CONTEXT(N'SubscriberId') AS UNIQUEIDENTIFIER)
     );
 GO
+
 
 
 

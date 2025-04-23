@@ -109,6 +109,11 @@ public class GenericEnclaveRepository<T> : IGenericRepository<T> where T : class
         }
         return obj;
     }
+
+    public Task SetContextAsync(Dictionary<string, object> contextVariables)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 // Extension method to safely check columns

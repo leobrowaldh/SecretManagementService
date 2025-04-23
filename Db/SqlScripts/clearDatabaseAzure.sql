@@ -2,24 +2,17 @@
 
 -- remove roles
 
-ALTER ROLE InternalAdminRole DROP MEMBER [SecretManagement_InternalAdministrators];
-ALTER ROLE ExternalAdminRole DROP MEMBER [SecretManagement_ExternalAdministrators];
-ALTER ROLE UserRole DROP MEMBER [SecretManagement_Users];
-ALTER ROLE AppRole DROP MEMBER [SecretManagementService-FunctionApp];
-ALTER ROLE db_securityadmin DROP MEMBER [leo.browaldh@innofactor.com];
+ALTER ROLE NotificationFunctionAppRole DROP MEMBER [SecretManagementService-FunctionApp];
 
 DROP ROLE IF EXISTS InternalAdminRole;
 DROP ROLE IF EXISTS ExternalAdminRole;
 DROP ROLE IF EXISTS UserRole;
-DROP ROLE IF EXISTS AppRole;
+DROP ROLE IF EXISTS NotificationFunctionAppRole;
 GO
 
 --drop users
-DROP USER IF EXISTS  [SecretManagement_InternalAdministrators];
-DROP USER IF EXISTS  [SecretManagement_ExternalAdministrators];
-DROP USER IF EXISTS [SecretManagement_Users];
-DROP USER IF EXISTS [SecretManagementService-FunctionApp];
-DROP USER IF EXISTS [leo.browaldh@innofactor.com];
+DROP USER IF EXISTS  [SecretManagementService-FunctionApp];
+DROP USER IF EXISTS  [SecretManagementService-Api];
 GO
 
 -- Drop RLS policies

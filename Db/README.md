@@ -57,6 +57,18 @@ Run the scripts in the following order:
 
 To person encrypting the columns of course need access to the column master key.
 
+# Entra Configuration:
+
+1. Create the Entra Id Groups refered to in the script initDatabase-post-migrations.sql as security groups:
+					
+	SecretManagement_InternalAdministrators
+    SecretManagement_ExternalAdministrators
+    SecretManagement_Users
+    SecretManagementService-FunctionApp
+
+2. The SQL server need to be added as an app registration in entra, and then in token configuration add group claims / select security groups, so that the Entra
+   groups are included in the token for the database to map.
+
 
 # The Repositories:
 

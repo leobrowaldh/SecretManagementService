@@ -137,4 +137,9 @@ public class PhoneRepository : IGenericRepository<Phone>
         await cmd.ExecuteNonQueryAsync();
         return phone;
     }
+
+    public Task SetContextAsync(Dictionary<string, object> contextVariables)
+    {
+        throw new NotImplementedException();
+    }
 }

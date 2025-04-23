@@ -91,4 +91,9 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     // Configure your filtering for this particular entity, querying the properties you want to search in.
     protected virtual IQueryable<T> ApplyCustomFilter(IQueryable<T> query, bool seeded, string filter) => query;
+
+    public Task SetContextAsync(Dictionary<string, object> contextVariables)
+    {
+        throw new NotImplementedException();
+    }
 }
