@@ -24,6 +24,7 @@ builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
 
+// Services
 builder.Services.AddScoped<IAzureTokenService, AzureTokenService>();
 builder.Services.AddScoped<IGraphApiService, GraphApiService>();
 builder.Services.AddScoped<ISecretsService, SecretsService>();
@@ -32,6 +33,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISmsService, SmsService>();
 builder.Services.AddScoped<IDbService, DbServiceMock>(); //***Mocking***
 
+//DbRepos
 builder.Services.AddScoped<IGenericRepository<Secret>, SecretRepository>();
 builder.Services.AddScoped<IGenericRepository<Application>, ApplicationRepository>();
 builder.Services.AddScoped<IGenericRepository<Subscriber>, SubscriberRepository>();
@@ -41,6 +43,8 @@ builder.Services.AddScoped<IGenericRepository<Phone>, PhoneRepository>();
 
 builder.Services.AddHttpContextAccessor();
 
+
+// For Azure authentication with client secret
 builder.Services.AddHttpClient(name: "AzureAuth",
     configureClient: options =>
     {
@@ -62,7 +66,7 @@ builder.Services.AddSendGrid(options =>
     var sendGridApiKey = builder.Configuration["sendgrid-api-key"];
     if (string.IsNullOrEmpty(sendGridApiKey))
     {
-        throw new ArgumentNullException("sendgrid-api-key is not found in Key Vault");
+        Console.WriteLine("sendgrid-api-key is not found in Key Vault");
     }
 
     options.ApiKey = sendGridApiKey;

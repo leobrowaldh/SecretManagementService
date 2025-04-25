@@ -41,7 +41,7 @@ public class AzureTokenService : IAzureTokenService
         });
 
         var httpClient = _httpClientFactory.CreateClient(name: "AzureAuth");
-        
+
         try
         {
             var response = await httpClient.PostAsync(tokenUri, body);

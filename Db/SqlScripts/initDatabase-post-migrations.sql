@@ -2,7 +2,7 @@
 
 -- Create users mapped to Entra ID service principals
 CREATE USER [SecretManagementService-FunctionApp] FROM EXTERNAL PROVIDER;   -- Background notifications
-CREATE USER [SecretManagementService-Api] FROM EXTERNAL PROVIDER;                -- API backend
+CREATE USER [SecretManagementService-APIFunctionApp] FROM EXTERNAL PROVIDER;                -- API backend
 
 --create roles
 CREATE ROLE InternalAdminRole; -- inmune to rls
