@@ -24,11 +24,12 @@ variables:
   #Env variables
   keyVaultUri: 'https://sms-appsecrets.vault.azure.net/'
   notifierClientId: '4e72630e-e7a9-444f-8287-c7b704149746'
+  apiClientId: 'd03aa946-bf5c-4103-9388-79003c248aac'
   tenantId: 'd87548be-2c3c-454d-8214-8941643fc99f'
-  #Needed for ConfigureKeyVault method in Program.cs:
   environment: 'Development'
   #hostId must be less than 32 chars to avoid name collisions caused by truncation:
-  hostId: 'func-secretmgmt-dev-001'
+  notifierHostId: 'func-secretmgmt-dev-001'
+  apiHostId: 'func-smsAPI-dev-001'
   #Configures when notification of expiring secrets should occur
   daysUntilSecretsExpire: '30'
   
@@ -98,7 +99,7 @@ stages:
                 -KEY_VAULT_URI $(keyVaultUri)
                 -CLIENT_ID $(notifierClientId)
                 -TENANT_ID $(tenantId)
-                -AzureFunctionsWebHost__hostid $(hostId)
+                -AzureFunctionsWebHost__hostid $(notifierHostId)
                 -ASPNETCORE_ENVIRONMENT $(environment)
                 -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
 
@@ -166,7 +167,7 @@ stages:
               runtimeStack:  'DOTNET-ISOLATED|9.0'
               appSettings: >
                 -KEY_VAULT_URI $(keyVaultUri)
-                -CLIENT_ID $(notifierClientId)
+                -CLIENT_ID $(apiClientId)
                 -TENANT_ID $(tenantId)
-                -AzureFunctionsWebHost__hostid $(hostId)
+                -AzureFunctionsWebHost__hostid $(apiHostId)
                 -ASPNETCORE_ENVIRONMENT $(environment)
