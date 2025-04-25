@@ -11,33 +11,32 @@ variables:
   # Azure Resource Manager connection created during pipeline creation
   azureSubscription: 'InnofactorManagedComponents-ServiceConnection'
 
-  # Function app name
-  functionAppName: 'func-secretmanagementservice-development-001'
+  # Function app names
+  secretNotifierFunctionAppName: 'func-secretmanagementservice-development-001'
+  secretAPIFunctionAppName: 'func-SecretManagementServiceAPI-development-001'
 
   # Agent VM image name
   vmImageName: 'windows-latest'
-
-  # Working Directory
-  workingDirectory: '$(System.DefaultWorkingDirectory)/SecretManagementService'
 
   # Resource Group
   resourceGroup: 'LIA-ResourceGroup'
 
   #Env variables
   keyVaultUri: 'https://sms-appsecrets.vault.azure.net/'
-  clientId: '4e72630e-e7a9-444f-8287-c7b704149746'
+  notifierClientId: '4e72630e-e7a9-444f-8287-c7b704149746'
+  apiClientId: 'd03aa946-bf5c-4103-9388-79003c248aac'
   tenantId: 'd87548be-2c3c-454d-8214-8941643fc99f'
-  #Needed for ConfigureKeyVault method in Program.cs:
   environment: 'Development'
   #hostId must be less than 32 chars to avoid name collisions caused by truncation:
-  hostId: 'func-secretmgmt-dev-001'
+  notifierHostId: 'func-secretmgmt-dev-001'
+  apiHostId: 'func-smsAPI-dev-001'
   #Configures when notification of expiring secrets should occur
   daysUntilSecretsExpire: '30'
   
 
 stages:
-- stage: Build
-  displayName: Build stage
+- stage: BuildNotifierApp
+  displayName: Notifier App Build Stage
 
   jobs:
   - job: Build
@@ -46,29 +45,31 @@ stages:
       vmImage: $(vmImageName)
 
     steps:
+    #Build Notifier Function App:
     - task: DotNetCoreCLI@2
-      displayName: Build
+      displayName: Build Notifier Function App
       inputs:
         command: 'build'
         projects: |
-          $(workingDirectory)/*.csproj
-        arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
+          $(System.DefaultWorkingDirectory)/SecretManagementService/*.csproj
+        arguments: --output $(System.DefaultWorkingDirectory)/publish_output_notifierApp --configuration Release
 
+    #Zip and publish Notifier Function App:
     - task: ArchiveFiles@2
-      displayName: 'Archive files'
+      displayName: 'Notifier Function App Archive files'
       inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output_notifierApp'
         includeRootFolder: false
         archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/notifierapp_$(Build.BuildId).zip
         replaceExistingArchive: true
 
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+    - publish: $(Build.ArtifactStagingDirectory)/notifierapp_$(Build.BuildId).zip
       artifact: drop
 
-- stage: Deploy
-  displayName: Deploy stage
-  dependsOn: Build
+- stage: DeployNotifierApp
+  displayName: Notifier App Deploy stage
+  dependsOn: BuildNotifierApp
   condition: succeeded()
 
   jobs:
@@ -91,13 +92,82 @@ stages:
               isFlexConsumption: true
               connectedServiceNameARM: $(azureSubscription)
               appType: 'functionAppLinux'
-              appName: $(functionAppName)
-              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              appName: $(secretNotifierFunctionAppName)
+              package: '$(Pipeline.Workspace)/drop/notifierapp_$(Build.BuildId).zip'
               runtimeStack:  'DOTNET-ISOLATED|9.0'
               appSettings: >
                 -KEY_VAULT_URI $(keyVaultUri)
-                -CLIENT_ID $(clientId)
+                -CLIENT_ID $(notifierClientId)
                 -TENANT_ID $(tenantId)
-                -AzureFunctionsWebHost__hostid $(hostId)
+                -AzureFunctionsWebHost__hostid $(notifierHostId)
                 -ASPNETCORE_ENVIRONMENT $(environment)
                 -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
+
+- stage: BuildAPIApp
+  displayName: API App Build Stage
+
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+
+    steps:
+    #Build API Function App:
+    - task: DotNetCoreCLI@2
+      displayName: Build API Function App
+      inputs:
+        command: 'build'
+        projects: |
+          $(System.DefaultWorkingDirectory)/SMSAPI/*.csproj
+        arguments: --output $(System.DefaultWorkingDirectory)/publish_output_APIApp --configuration Release
+
+    #Zip and publish API Function App:
+    - task: ArchiveFiles@2
+      displayName: 'API Function App Archive files'
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output_APIApp'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/apiapp_$(Build.BuildId).zip
+        replaceExistingArchive: true
+
+    - publish: $(Build.ArtifactStagingDirectory)/apiapp_$(Build.BuildId).zip
+      artifact: drop
+
+ 
+
+- stage: DeployAPIApp
+  displayName: API App Deploy stage
+  dependsOn: BuildAPIApp
+  condition: succeeded()
+
+  jobs:
+  
+  - deployment: Deploy
+    displayName: Deploy
+    environment: 'development'
+    pool:
+      vmImage: $(vmImageName)
+
+    strategy:
+      runOnce:
+        deploy:
+
+          steps:
+
+          - task: AzureFunctionApp@2
+            displayName: 'Azure functions app deploy'
+            inputs:
+              isFlexConsumption: true
+              connectedServiceNameARM: $(azureSubscription)
+              appType: 'functionAppLinux'
+              appName: $(secretAPIFunctionAppName)
+              package: '$(Pipeline.Workspace)/drop/apiapp_$(Build.BuildId).zip'
+              runtimeStack:  'DOTNET-ISOLATED|9.0'
+              appSettings: >
+                -KEY_VAULT_URI $(keyVaultUri)
+                -CLIENT_ID $(apiClientId)
+                -TENANT_ID $(tenantId)
+                -AzureFunctionsWebHost__hostid $(apiHostId)
+                -ASPNETCORE_ENVIRONMENT $(environment)
