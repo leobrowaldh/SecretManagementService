@@ -2,7 +2,7 @@
 
 -- remove roles
 
-ALTER ROLE NotificationFunctionAppRole DROP MEMBER [SecretManagementService-FunctionApp];
+ALTER ROLE NotificationFunctionAppRole DROP MEMBER [func-SecretManagementService-development-001];
 
 DROP ROLE IF EXISTS InternalAdminRole;
 DROP ROLE IF EXISTS ExternalAdminRole;
@@ -11,8 +11,7 @@ DROP ROLE IF EXISTS NotificationFunctionAppRole;
 GO
 
 --drop users
-DROP USER IF EXISTS  [SecretManagementService-FunctionApp];
-DROP USER IF EXISTS  [SecretManagementService-Api];
+DROP USER IF EXISTS  [func-SecretManagementService-development-001];
 GO
 
 -- Drop RLS policies

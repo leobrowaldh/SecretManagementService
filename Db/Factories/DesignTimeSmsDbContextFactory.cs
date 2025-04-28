@@ -1,11 +1,10 @@
 using Azure.Identity;
-using Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using SharedResources.ExtensionMethods;
 
-namespace Db;
+namespace Db.Factories;
 
 // This class is used to create the database context for the EF Core tools
 // we need some configuration to be able to create the context
@@ -16,7 +15,7 @@ public class DesignTimeSmsDbContextFactory : IDesignTimeDbContextFactory<SmsDbCo
 
         var builder = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+            .AddJsonFile("designsettings.json", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables();
 
         builder.ConfigureKeyVault();

@@ -8,11 +8,26 @@ public static class ConfigurationExtensions
 {
     public static IConfigurationBuilder ConfigureKeyVault(this IConfigurationBuilder builder)
     {
-        var keyVaultUri = Environment.GetEnvironmentVariable("KEY_VAULT_URI")
-        ?? throw new ArgumentNullException("KEY_VAULT_URI not found in environment variables");
+        var basePath = Directory.GetCurrentDirectory();
 
-        var environment = Environment.GetEnvironmentVariable("ENVIRONMENT")
-            ?? throw new ArgumentNullException("ENVIRONMENT not found in environment variables");
+        if (!File.Exists(Path.Combine(basePath, "designsettings.json")))
+        {
+            basePath = AppContext.BaseDirectory;
+        }
+
+        // Create a TEMPORARY builder
+        var tempConfig = new ConfigurationBuilder()
+            .SetBasePath(basePath)
+            .AddJsonFile("designsettings.json", optional: true)
+            .AddJsonFile("local.settings.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+
+        var keyVaultUri = tempConfig["KEY_VAULT_URI"]
+            ?? throw new ArgumentNullException("KEY_VAULT_URI not found in configuration");
+
+        var environment = tempConfig["ENVIRONMENT"]
+            ?? throw new ArgumentNullException("ENVIRONMENT not found in configuration");
 
         var excludeLocalDevelopment = environment != "Local";
         var excludeManagedIdentity = !excludeLocalDevelopment;

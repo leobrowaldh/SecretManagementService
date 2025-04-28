@@ -12,6 +12,8 @@ using Db;
 using SharedResources.ExtensionMethods;
 using Db.Repositories;
 using Db.DbModels;
+using Microsoft.Data.SqlClient;
+using Db.Factories;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -31,15 +33,25 @@ builder.Services.AddScoped<ISecretsService, SecretsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISmsService, SmsService>();
-builder.Services.AddScoped<IDbService, DbServiceMock>(); //***Mocking***
+builder.Services.AddScoped<IDbService, DbService>();
 
 //DbRepos
 builder.Services.AddScoped<IGenericRepository<Secret>, SecretRepository>();
 builder.Services.AddScoped<IGenericRepository<Application>, ApplicationRepository>();
 builder.Services.AddScoped<IGenericRepository<Subscriber>, SubscriberRepository>();
 builder.Services.AddScoped<IGenericRepository<ApiEndpoint>, ApiEndpointRepository>();
-builder.Services.AddScoped<IGenericRepository<Email>, EmailRepository>();
-builder.Services.AddScoped<IGenericRepository<Phone>, PhoneRepository>();
+builder.Services.AddScoped<IEmailRepository, EmailRepository>();
+builder.Services.AddScoped<IPhoneRepository, PhoneRepository>();
+
+//ADO.Net sql connection factory to share the efc connection:
+builder.Services.AddScoped<ISqlConnectionFactory, SqlConnectionFactory>();
+
+
+//EFC sql connection
+builder.Services.AddDbContext<SmsDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SecretManagementServiceContext"));
+});
 
 builder.Services.AddHttpContextAccessor();
 
@@ -72,10 +84,6 @@ builder.Services.AddSendGrid(options =>
     options.ApiKey = sendGridApiKey;
 });
 
-builder.Services.AddDbContext<SmsDbContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SecretManagementServiceContext"));
-});
 
 builder.Build().Run();
 

@@ -1,0 +1,4 @@
+﻿{
+  "ENVIRONMENT": "Local",
+  "KEY_VAULT_URI": "https://sms-appsecrets.vault.azure.net/"
+}

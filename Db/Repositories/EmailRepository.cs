@@ -2,21 +2,18 @@
 using Db.DbModels;
 using Db.Dtos;
 using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Http;
-using System.Data;
+using Db.Factories;
 
 namespace Db.Repositories;
 
-public class EmailRepository : IGenericRepository<Email>
+public class EmailRepository : IEmailRepository
 {
-    private readonly string _connectionString;
+    private readonly ISqlConnectionFactory _sqlConnectionFactory;
 
-    public EmailRepository(IConfiguration configuration)
+    public EmailRepository(ISqlConnectionFactory sqlConnectionFactory)
     {
-        _connectionString = configuration.GetConnectionString("SecretManagementServiceContext") ??
-            throw new InvalidOperationException("no connection string found");
+        _sqlConnectionFactory = sqlConnectionFactory;
     }
-
 
     public async Task<ResponsePageDto<Email>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false)
     {
@@ -24,10 +21,8 @@ public class EmailRepository : IGenericRepository<Email>
         int totalCount = 0;
         filter = filter?.ToLower() ?? "";
 
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
+        using var connection = _sqlConnectionFactory.CreateConnection();
 
-        // Count
         using (var countCmd = connection.CreateCommand())
         {
             countCmd.CommandText = @"
@@ -37,7 +32,6 @@ public class EmailRepository : IGenericRepository<Email>
             totalCount = (int)(await countCmd.ExecuteScalarAsync());
         }
 
-        // Paged query
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
             SELECT EmailId, EmailAddress
@@ -71,8 +65,7 @@ public class EmailRepository : IGenericRepository<Email>
 
     public async Task<Email?> ReadItemAsync(Guid itemId, bool flat)
     {
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
+        using var connection = _sqlConnectionFactory.CreateConnection();
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT EmailId, EmailAddress FROM suprusr.Emails WHERE EmailId = @Id";
@@ -93,8 +86,7 @@ public class EmailRepository : IGenericRepository<Email>
 
     public async Task<Email> AddItemAsync(Email email)
     {
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
+        using var connection = _sqlConnectionFactory.CreateConnection();
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -110,8 +102,7 @@ public class EmailRepository : IGenericRepository<Email>
 
     public async Task<Email> UpdateItemAsync(Email email)
     {
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
+        using var connection = _sqlConnectionFactory.CreateConnection();
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -132,8 +123,7 @@ public class EmailRepository : IGenericRepository<Email>
         if (email == null)
             throw new ArgumentException($"Email {emailId} not found");
 
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
+        using var connection = _sqlConnectionFactory.CreateConnection();
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "DELETE FROM suprusr.Emails WHERE EmailId = @EmailId";
@@ -143,8 +133,32 @@ public class EmailRepository : IGenericRepository<Email>
         return email;
     }
 
-    public Task SetContextAsync(Dictionary<string, object> contextVariables)
+    public async Task<List<Email>> GetEmailsBySecretIdAsync(Guid secretId)
     {
-        throw new NotImplementedException();
+        var emails = new List<Email>();
+
+        using var connection = _sqlConnectionFactory.CreateConnection();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT e.EmailId, e.EmailAddress
+            FROM suprusr.Emails e
+            INNER JOIN suprusr.EmailSecret es ON e.EmailId = es.EmailsEmailId
+            WHERE es.SecretsSecretId = @SecretId";
+
+        cmd.Parameters.AddWithValue("@SecretId", secretId);
+
+        using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            emails.Add(new Email
+            {
+                EmailId = reader.GetGuid(reader.GetOrdinal("EmailId")),
+                EmailAddress = reader.GetString(reader.GetOrdinal("EmailAddress"))
+            });
+        }
+
+        return emails;
     }
+
 }

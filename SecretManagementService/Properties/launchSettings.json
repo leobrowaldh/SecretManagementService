@@ -8,9 +8,7 @@
         "CLIENT_ID": "4e72630e-e7a9-444f-8287-c7b704149746",
         "TENANT_ID": "d87548be-2c3c-454d-8214-8941643fc99f",
         "DAYS_UNTIL_SECRET_EXPIRES": "30",
-        "SMS_URL": "www.notyetimplemented.com",
-        "ENVIRONMENT": "Local",
-        "KEY_VAULT_URI": "https://sms-appsecrets.vault.azure.net/"
+        "SMS_URL": "www.notyetimplemented.com"
       }
     }
   }

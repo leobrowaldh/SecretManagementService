@@ -1,8 +1,7 @@
 
 
 -- Create users mapped to Entra ID service principals
-CREATE USER [SecretManagementService-FunctionApp] FROM EXTERNAL PROVIDER;   -- Background notifications
-CREATE USER [SecretManagementService-APIFunctionApp] FROM EXTERNAL PROVIDER;                -- API backend
+CREATE USER [func-SecretManagementService-development-001] FROM EXTERNAL PROVIDER WITH OBJECT_ID='13e2387d-f8a2-489e-b375-50703fd42e60';            -- API backend
 
 --create roles
 CREATE ROLE InternalAdminRole; -- inmune to rls
@@ -10,10 +9,6 @@ CREATE ROLE ExternalAdminRole;
 CREATE ROLE UserRole;
 CREATE ROLE NotificationFunctionAppRole; -- inmune to rls
 
-
---Assign The static funciton app role
-ALTER ROLE NotificationFunctionAppRole ADD MEMBER [SecretManagementService-FunctionApp];
-GO
 
 --Assign Permissions to Roles:
 
@@ -43,8 +38,9 @@ AS
 RETURN 
     SELECT 1
     WHERE 
-    CHARINDEX('InternalAdminRole', SESSION_CONTEXT(N'UserRoles')) > 0
+    CHARINDEX('InternalAdminRole', CAST(SESSION_CONTEXT(N'UserRoles') AS NVARCHAR(MAX))) > 0
     OR IS_MEMBER('db_owner') = 1
+    OR IS_MEMBER('NotificationFunctionAppRole') = 1
     OR @SubscriberId = CAST(SESSION_CONTEXT(N'SubscriberId') AS UNIQUEIDENTIFIER);
 GO
 
@@ -55,8 +51,9 @@ AS
 RETURN 
     SELECT 1
     WHERE
-    CHARINDEX('InternalAdminRole', SESSION_CONTEXT(N'UserRoles')) > 0
+    CHARINDEX('InternalAdminRole', CAST(SESSION_CONTEXT(N'UserRoles') AS NVARCHAR(MAX))) > 0
     OR IS_MEMBER('db_owner') = 1
+    OR IS_MEMBER('NotificationFunctionAppRole') = 1
     OR EXISTS (
         SELECT 1
         FROM usr.Secrets s
@@ -72,8 +69,9 @@ AS
 RETURN 
     SELECT 1
     WHERE
-    CHARINDEX('InternalAdminRole', SESSION_CONTEXT(N'UserRoles')) > 0
+    CHARINDEX('InternalAdminRole', CAST(SESSION_CONTEXT(N'UserRoles') AS NVARCHAR(MAX))) > 0
     OR IS_MEMBER('db_owner') = 1
+    OR IS_MEMBER('NotificationFunctionAppRole') = 1
     OR EXISTS (
         SELECT 1
         FROM usr.Secrets s
@@ -90,8 +88,9 @@ AS
 RETURN 
     SELECT 1
     WHERE
-    CHARINDEX('InternalAdminRole', SESSION_CONTEXT(N'UserRoles')) > 0
+    CHARINDEX('InternalAdminRole', CAST(SESSION_CONTEXT(N'UserRoles') AS NVARCHAR(MAX))) > 0
     OR IS_MEMBER('db_owner') = 1
+    OR IS_MEMBER('NotificationFunctionAppRole') = 1
     OR EXISTS (
         SELECT 1
         FROM usr.Secrets s

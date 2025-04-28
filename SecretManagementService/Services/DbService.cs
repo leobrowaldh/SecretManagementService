@@ -1,6 +1,14 @@
-﻿using SecretManagementService.Models.Dtos;
+﻿using Db;
+using Db.DbModels;
+using Db.Factories;
+using Db.Repositories;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using SecretManagementService.Models;
+using SecretManagementService.Models.Dtos;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,15 +16,75 @@ using System.Threading.Tasks;
 namespace SecretManagementService.Services;
 public class DbService : IDbService
 {
-    //context.Database.ExecuteSqlRaw("EXEC sp_set_session_context @key='TenantId', @value={0}", tenantId);
-    //this sets the session context for the current connection, for Row based security in the database
-    //wait, fetch the corresponding subscriberid with the tenantid, and send in the subscriberid in the context.
-    //This way we avoid tight coupling to azure.
-    //EXEC sp_set_session_context @key = 'SubscriberId', @value = '<SubscriberId>';
-
-    public Task<SecretNotificationInfo?> GetNotificationInfoAsync(string secretId)
+    private readonly ISqlConnectionFactory _sqlConnectionFactory;
+    private readonly IGenericRepository<Secret> _secretRepo;
+    private readonly IPhoneRepository _phoneRepository;
+    private readonly IEmailRepository _emailRepository;
+    public DbService(ISqlConnectionFactory sqlConnectionFactory, IGenericRepository<Secret> secretRepo, IPhoneRepository phoneRepository, IEmailRepository emailRepository)
     {
-        throw new NotImplementedException();
+        _sqlConnectionFactory = sqlConnectionFactory;
+        _secretRepo = secretRepo;
+        _phoneRepository = phoneRepository;
+        _emailRepository = emailRepository;
+    }
+
+    public async Task SetContextAsync(Dictionary<string, object?> contextVariables)
+    {
+        using var connection = _sqlConnectionFactory.CreateConnection();
+
+        foreach (var contextVariable in contextVariables)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = "EXEC sp_set_session_context @key, @value";
+            cmd.Parameters.AddWithValue("@key", contextVariable.Key);
+            cmd.Parameters.AddWithValue("@value", contextVariable.Value ?? DBNull.Value);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+    }
+
+    public async Task<SecretNotificationInfo?> GetNotificationInfoAsync(string secretId)
+    {
+        // Step 1: Fetch the Secret entity with its non-sensitive fields (e.g., Subscriber, Application)
+        var secret = await _secretRepo.ReadItemAsync(Guid.Parse(secretId), false);
+
+        if (secret == null)
+        {
+            return null;
+        }
+
+        // Step 2: Fetch the encrypted Phones, Emails separately using your ADO.NET repositories
+        var phones = await _phoneRepository.GetPhonesBySecretIdAsync(secret.SecretId); // ADO.NET call for Phones (decrypting)
+        var emails = await _emailRepository.GetEmailsBySecretIdAsync(secret.SecretId); // ADO.NET call for Emails (decrypting)
+
+        // Step 3: Map everything into the SecretNotificationInfo object
+        var notificationInfo = new SecretNotificationInfo
+        {
+            SecretId = secretId,
+            AppId = secret.Application?.ApplicationId.ToString() ?? string.Empty,
+            DisplayName = secret.DisplayName,
+            EndDateTime = secret.EndDateTime,
+            LastTimeNotified = secret.LastTimeNotified,
+            ContactMethod = new ContactMethod
+            {
+                IsEmail = secret.ContactByEmail,
+                IsSMS = secret.ContactBySMS,
+                IsApiEndpoint = secret.ContactByApiEndpoint,
+                Emails = emails.Select(e => e.EmailAddress).ToList(),
+                PhoneNumbers = phones.Select(p => p.PhoneNumber).ToList(),
+                ApiInfo = new ApiInfo
+                {
+                    //Not yet implemented, add logic here when models are fully defined.
+                    SecretId = secretId,
+                    BaseUrl = secret.ApiEndpoints.FirstOrDefault()?.BaseUrl ?? string.Empty
+                }
+            }
+        };
+
+        // Step 4: Calculate days until expiration
+        notificationInfo.DaysUntilSecretExpires = (secret.EndDateTime - DateTime.UtcNow).Days;
+
+        return notificationInfo;
     }
 
     public Task<bool> ShouldNotifyAsync(string secretId, out SecretNotificationInfo notificationDto)

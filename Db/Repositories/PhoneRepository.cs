@@ -2,17 +2,18 @@
 using Db.DbModels;
 using Db.Dtos;
 using Microsoft.Extensions.Configuration;
+using Db.Factories;
 
 namespace Db.Repositories;
 
-public class PhoneRepository : IGenericRepository<Phone>
+public class PhoneRepository : IPhoneRepository
 {
-    private readonly string _connectionString;
+    private readonly ISqlConnectionFactory _sqlConnectionFactory;
 
-    public PhoneRepository(IConfiguration configuration)
+    // Inject the factory instead of the connection string
+    public PhoneRepository(ISqlConnectionFactory sqlConnectionFactory)
     {
-        _connectionString = configuration.GetConnectionString("SecretManagementServiceContext") ??
-            throw new InvalidOperationException("no connection string found");
+        _sqlConnectionFactory = sqlConnectionFactory;
     }
 
     public async Task<ResponsePageDto<Phone>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false)
@@ -21,8 +22,8 @@ public class PhoneRepository : IGenericRepository<Phone>
         int totalCount = 0;
         filter = filter ?? "";
 
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
+        // Use the connection from the factory
+        using var connection = _sqlConnectionFactory.CreateConnection();
 
         using (var countCmd = connection.CreateCommand())
         {
@@ -66,8 +67,7 @@ public class PhoneRepository : IGenericRepository<Phone>
 
     public async Task<Phone?> ReadItemAsync(Guid itemId, bool flat)
     {
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
+        using var connection = _sqlConnectionFactory.CreateConnection();
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT PhoneId, PhoneNumber FROM suprusr.Phones WHERE PhoneId = @Id";
@@ -88,8 +88,7 @@ public class PhoneRepository : IGenericRepository<Phone>
 
     public async Task<Phone> AddItemAsync(Phone phone)
     {
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
+        using var connection = _sqlConnectionFactory.CreateConnection();
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -105,8 +104,7 @@ public class PhoneRepository : IGenericRepository<Phone>
 
     public async Task<Phone> UpdateItemAsync(Phone phone)
     {
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
+        using var connection = _sqlConnectionFactory.CreateConnection();
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -127,8 +125,7 @@ public class PhoneRepository : IGenericRepository<Phone>
         if (phone == null)
             throw new ArgumentException($"Phone {phoneId} not found");
 
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
+        using var connection = _sqlConnectionFactory.CreateConnection();
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "DELETE FROM suprusr.Phones WHERE PhoneId = @PhoneId";
@@ -138,8 +135,32 @@ public class PhoneRepository : IGenericRepository<Phone>
         return phone;
     }
 
-    public Task SetContextAsync(Dictionary<string, object> contextVariables)
+    public async Task<List<Phone>> GetPhonesBySecretIdAsync(Guid secretId)
     {
-        throw new NotImplementedException();
+        var phones = new List<Phone>();
+
+        using var connection = _sqlConnectionFactory.CreateConnection();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT p.PhoneId, p.PhoneNumber
+            FROM suprusr.Phones p
+            INNER JOIN suprusr.PhoneSecret ps ON p.PhoneId = ps.PhonesPhoneId
+            WHERE ps.SecretsSecretId = @SecretId";
+
+        cmd.Parameters.AddWithValue("@SecretId", secretId);
+
+        using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            phones.Add(new Phone
+            {
+                PhoneId = reader.GetGuid(reader.GetOrdinal("PhoneId")),
+                PhoneNumber = reader.GetString(reader.GetOrdinal("PhoneNumber"))
+            });
+        }
+
+        return phones;
     }
+
 }

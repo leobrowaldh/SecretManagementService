@@ -20,4 +20,30 @@ public class SecretRepository : GenericRepository<Secret>
         }
         return query;
     }
+
+    //we do not want to fetch encrypted data, so we override the ApplyIncludes method in order to exclude encrypted tables
+    protected override IQueryable<Secret> ApplyIncludes(IQueryable<Secret> query, bool flat)
+    {
+        if (flat)
+            return query;
+
+        var navigations = _dbContext.Model.FindEntityType(typeof(Secret))?
+                             .GetNavigations()
+                             .Select(n => n.Name);
+
+        if (navigations != null)
+        {
+            foreach (var navigation in navigations)
+            {
+                // Exclude the encrypted properties (Emails, Phones) from being included
+                if (navigation != "Emails" && navigation != "Phones")
+                {
+                    query = query.Include(navigation);
+                }
+            }
+        }
+
+        return query;
+    }
+
 }
