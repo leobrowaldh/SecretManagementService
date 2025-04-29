@@ -28,19 +28,9 @@ public class DbService : IDbService
         _emailRepository = emailRepository;
     }
 
-    public async Task SetContextAsync(Dictionary<string, object?> contextVariables)
+    public void SetContext(Dictionary<string, object?> contextVariables)
     {
-        using var connection = _sqlConnectionFactory.CreateConnection();
-
-        foreach (var contextVariable in contextVariables)
-        {
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = "EXEC sp_set_session_context @key, @value";
-            cmd.Parameters.AddWithValue("@key", contextVariable.Key);
-            cmd.Parameters.AddWithValue("@value", contextVariable.Value ?? DBNull.Value);
-
-            await cmd.ExecuteNonQueryAsync();
-        }
+        _sqlConnectionFactory.SetSessionContext(contextVariables);
     }
 
     public async Task<SecretNotificationInfo?> GetNotificationInfoAsync(string secretId)

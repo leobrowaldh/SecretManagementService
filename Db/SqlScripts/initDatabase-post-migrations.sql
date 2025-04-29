@@ -1,7 +1,11 @@
 
 
--- Create users mapped to Entra ID service principals
-CREATE USER [func-SecretManagementService-development-001] FROM EXTERNAL PROVIDER WITH OBJECT_ID='13e2387d-f8a2-489e-b375-50703fd42e60';            -- API backend
+-- Create users
+CREATE USER [func-SecretManagementService-development-001] FROM EXTERNAL PROVIDER WITH OBJECT_ID='13e2387d-f8a2-489e-b375-50703fd42e60';            -- the App
+CREATE USER [AppScopedUser_BackgroundTasks] WITHOUT LOGIN;
+CREATE USER [AppScopedUser_User] WITHOUT LOGIN; -- from the app, use EXECUTE AS USER = 'AppScopedUser_User';
+CREATE USER [AppScopedUser_ExternalAdmin] WITHOUT LOGIN;
+CREATE USER [AppScopedUser_InternalAdmin] WITHOUT LOGIN;
 
 --create roles
 CREATE ROLE InternalAdminRole; -- inmune to rls
@@ -9,8 +13,11 @@ CREATE ROLE ExternalAdminRole;
 CREATE ROLE UserRole;
 CREATE ROLE NotificationFunctionAppRole; -- inmune to rls
 
-
 --Assign Permissions to Roles:
+ALTER ROLE InternalAdminRole ADD MEMBER [AppScopedUser_InternalAdmin];
+ALTER ROLE ExternalAdminRole ADD MEMBER [AppScopedUser_ExternalAdmin];
+ALTER ROLE UserRole ADD MEMBER [AppScopedUser_User];
+ALTER ROLE NotificationFunctionAppRole ADD MEMBER [AppScopedUser_BackgroundTasks];
 
 -- Internal Admins get full access to everything
 GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::suprusr TO InternalAdminRole;
@@ -38,7 +45,7 @@ AS
 RETURN 
     SELECT 1
     WHERE 
-    CHARINDEX('InternalAdminRole', CAST(SESSION_CONTEXT(N'UserRoles') AS NVARCHAR(MAX))) > 0
+    IS_MEMBER('InternalAdminRole') = 1
     OR IS_MEMBER('db_owner') = 1
     OR IS_MEMBER('NotificationFunctionAppRole') = 1
     OR @SubscriberId = CAST(SESSION_CONTEXT(N'SubscriberId') AS UNIQUEIDENTIFIER);
@@ -51,7 +58,7 @@ AS
 RETURN 
     SELECT 1
     WHERE
-    CHARINDEX('InternalAdminRole', CAST(SESSION_CONTEXT(N'UserRoles') AS NVARCHAR(MAX))) > 0
+    IS_MEMBER('InternalAdminRole') = 1
     OR IS_MEMBER('db_owner') = 1
     OR IS_MEMBER('NotificationFunctionAppRole') = 1
     OR EXISTS (
@@ -69,7 +76,7 @@ AS
 RETURN 
     SELECT 1
     WHERE
-    CHARINDEX('InternalAdminRole', CAST(SESSION_CONTEXT(N'UserRoles') AS NVARCHAR(MAX))) > 0
+    IS_MEMBER('InternalAdminRole') = 1
     OR IS_MEMBER('db_owner') = 1
     OR IS_MEMBER('NotificationFunctionAppRole') = 1
     OR EXISTS (
@@ -88,7 +95,7 @@ AS
 RETURN 
     SELECT 1
     WHERE
-    CHARINDEX('InternalAdminRole', CAST(SESSION_CONTEXT(N'UserRoles') AS NVARCHAR(MAX))) > 0
+    IS_MEMBER('InternalAdminRole') = 1
     OR IS_MEMBER('db_owner') = 1
     OR IS_MEMBER('NotificationFunctionAppRole') = 1
     OR EXISTS (
