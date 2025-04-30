@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace Db.Repositories;
 public interface IGenericRepository<T>
 {
+    void SetContext(Dictionary<string, object?> contextVariables);
     Task<ResponsePageDto<T>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false);
     Task<T?> ReadItemAsync(Guid itemId, bool flat);
     Task<T> UpdateItemAsync(T item);

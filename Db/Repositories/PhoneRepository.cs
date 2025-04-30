@@ -2,18 +2,35 @@
 using Db.DbModels;
 using Db.Dtos;
 using Microsoft.Extensions.Configuration;
-using Db.Factories;
 
 namespace Db.Repositories;
 
 public class PhoneRepository : IPhoneRepository
 {
-    private readonly ISqlConnectionFactory _sqlConnectionFactory;
+    private readonly string _connectionString;
+    private Dictionary<string, object?> _sessionContext = new();
 
-    // Inject the factory instead of the connection string
-    public PhoneRepository(ISqlConnectionFactory sqlConnectionFactory)
+    public PhoneRepository(IConfiguration config)
     {
-        _sqlConnectionFactory = sqlConnectionFactory;
+        _connectionString = config.GetConnectionString("SecretManagementServiceContext")
+            ?? throw new InvalidOperationException("Missing Connection string.");
+    }
+
+    public void SetContext(Dictionary<string, object?> contextVariables)
+    {
+        _sessionContext = contextVariables ?? new();
+    }
+
+    private async Task ApplySessionContextAsync(SqlConnection connection)
+    {
+        foreach (var kvp in _sessionContext)
+        {
+            using var contextCmd = connection.CreateCommand();
+            contextCmd.CommandText = "EXEC sp_set_session_context @key = @Key, @value = @Value;";
+            contextCmd.Parameters.AddWithValue("@Key", kvp.Key);
+            contextCmd.Parameters.AddWithValue("@Value", kvp.Value ?? DBNull.Value);
+            await contextCmd.ExecuteNonQueryAsync();
+        }
     }
 
     public async Task<ResponsePageDto<Phone>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false)
@@ -22,8 +39,9 @@ public class PhoneRepository : IPhoneRepository
         int totalCount = 0;
         filter = filter ?? "";
 
-        // Use the connection from the factory
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using (var countCmd = connection.CreateCommand())
         {
@@ -67,7 +85,9 @@ public class PhoneRepository : IPhoneRepository
 
     public async Task<Phone?> ReadItemAsync(Guid itemId, bool flat)
     {
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT PhoneId, PhoneNumber FROM suprusr.Phones WHERE PhoneId = @Id";
@@ -88,7 +108,9 @@ public class PhoneRepository : IPhoneRepository
 
     public async Task<Phone> AddItemAsync(Phone phone)
     {
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -104,7 +126,9 @@ public class PhoneRepository : IPhoneRepository
 
     public async Task<Phone> UpdateItemAsync(Phone phone)
     {
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -125,7 +149,9 @@ public class PhoneRepository : IPhoneRepository
         if (phone == null)
             throw new ArgumentException($"Phone {phoneId} not found");
 
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "DELETE FROM suprusr.Phones WHERE PhoneId = @PhoneId";
@@ -139,7 +165,9 @@ public class PhoneRepository : IPhoneRepository
     {
         var phones = new List<Phone>();
 
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -162,5 +190,4 @@ public class PhoneRepository : IPhoneRepository
 
         return phones;
     }
-
 }

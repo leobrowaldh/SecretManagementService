@@ -16,13 +16,11 @@ using System.Threading.Tasks;
 namespace SecretManagementService.Services;
 public class DbService : IDbService
 {
-    private readonly ISqlConnectionFactory _sqlConnectionFactory;
     private readonly IGenericRepository<Secret> _secretRepo;
     private readonly IPhoneRepository _phoneRepository;
     private readonly IEmailRepository _emailRepository;
-    public DbService(ISqlConnectionFactory sqlConnectionFactory, IGenericRepository<Secret> secretRepo, IPhoneRepository phoneRepository, IEmailRepository emailRepository)
+    public DbService(IGenericRepository<Secret> secretRepo, IPhoneRepository phoneRepository, IEmailRepository emailRepository)
     {
-        _sqlConnectionFactory = sqlConnectionFactory;
         _secretRepo = secretRepo;
         _phoneRepository = phoneRepository;
         _emailRepository = emailRepository;
@@ -30,7 +28,9 @@ public class DbService : IDbService
 
     public void SetContext(Dictionary<string, object?> contextVariables)
     {
-        _sqlConnectionFactory.SetSessionContext(contextVariables);
+        _secretRepo.SetContext(contextVariables);
+        _phoneRepository.SetContext(contextVariables);
+        _emailRepository.SetContext(contextVariables);
     }
 
     public async Task<SecretNotificationInfo?> GetNotificationInfoAsync(string secretId)
@@ -76,6 +76,7 @@ public class DbService : IDbService
 
         return notificationInfo;
     }
+
 
     public Task<bool> ShouldNotifyAsync(string secretId, out SecretNotificationInfo notificationDto)
     {

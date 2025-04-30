@@ -2,32 +2,52 @@
 using Db.DbModels;
 using Db.Dtos;
 using Microsoft.Extensions.Configuration;
-using Db.Factories;
 
 namespace Db.Repositories;
 
 public class EmailRepository : IEmailRepository
 {
-    private readonly ISqlConnectionFactory _sqlConnectionFactory;
+    private readonly string _connectionString;
+    private Dictionary<string, object?> _sessionContext = new();
 
-    public EmailRepository(ISqlConnectionFactory sqlConnectionFactory)
+    public EmailRepository(IConfiguration config)
     {
-        _sqlConnectionFactory = sqlConnectionFactory;
+        _connectionString = config.GetConnectionString("SecretManagementServiceContext")
+            ?? throw new InvalidOperationException("Missing Connection string.");
+    }
+
+    public void SetContext(Dictionary<string, object?> contextVariables)
+    {
+        _sessionContext = contextVariables ?? new();
+    }
+
+    private async Task ApplySessionContextAsync(SqlConnection connection)
+    {
+        foreach (var kvp in _sessionContext)
+        {
+            using var contextCmd = connection.CreateCommand();
+            contextCmd.CommandText = "EXEC sp_set_session_context @key = @Key, @value = @Value;";
+            contextCmd.Parameters.AddWithValue("@Key", kvp.Key);
+            contextCmd.Parameters.AddWithValue("@Value", kvp.Value ?? DBNull.Value);
+            await contextCmd.ExecuteNonQueryAsync();
+        }
     }
 
     public async Task<ResponsePageDto<Email>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false)
     {
         var result = new List<Email>();
         int totalCount = 0;
-        filter = filter?.ToLower() ?? "";
+        filter = filter ?? "";
 
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using (var countCmd = connection.CreateCommand())
         {
             countCmd.CommandText = @"
                 SELECT COUNT(*) FROM suprusr.Emails
-                WHERE LOWER(EmailAddress) LIKE @Filter";
+                WHERE EmailAddress LIKE @Filter";
             countCmd.Parameters.AddWithValue("@Filter", $"%{filter}%");
             totalCount = (int)(await countCmd.ExecuteScalarAsync());
         }
@@ -36,7 +56,7 @@ public class EmailRepository : IEmailRepository
         cmd.CommandText = @"
             SELECT EmailId, EmailAddress
             FROM suprusr.Emails
-            WHERE LOWER(EmailAddress) LIKE @Filter
+            WHERE EmailAddress LIKE @Filter
             ORDER BY EmailId
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
 
@@ -65,7 +85,9 @@ public class EmailRepository : IEmailRepository
 
     public async Task<Email?> ReadItemAsync(Guid itemId, bool flat)
     {
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT EmailId, EmailAddress FROM suprusr.Emails WHERE EmailId = @Id";
@@ -86,7 +108,9 @@ public class EmailRepository : IEmailRepository
 
     public async Task<Email> AddItemAsync(Email email)
     {
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -102,7 +126,9 @@ public class EmailRepository : IEmailRepository
 
     public async Task<Email> UpdateItemAsync(Email email)
     {
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -123,7 +149,9 @@ public class EmailRepository : IEmailRepository
         if (email == null)
             throw new ArgumentException($"Email {emailId} not found");
 
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "DELETE FROM suprusr.Emails WHERE EmailId = @EmailId";
@@ -137,7 +165,9 @@ public class EmailRepository : IEmailRepository
     {
         var emails = new List<Email>();
 
-        using var connection = _sqlConnectionFactory.CreateConnection();
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await ApplySessionContextAsync(connection);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -160,5 +190,4 @@ public class EmailRepository : IEmailRepository
 
         return emails;
     }
-
 }

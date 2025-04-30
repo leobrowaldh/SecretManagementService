@@ -27,6 +27,7 @@ public class NotificationService : INotificationService
 
     public async Task<SecretNotificationInfo> FetchNotificationInfoAsync(string secretId)
     {
+        //No sessioncontext required since it is the app requesting data directly
         var secretNotificationInfo = await _dbService.GetNotificationInfoAsync(secretId);
         if (secretNotificationInfo == null)
         {

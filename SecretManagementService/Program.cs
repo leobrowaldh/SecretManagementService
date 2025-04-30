@@ -43,11 +43,7 @@ builder.Services.AddScoped<IGenericRepository<ApiEndpoint>, ApiEndpointRepositor
 builder.Services.AddScoped<IEmailRepository, EmailRepository>();
 builder.Services.AddScoped<IPhoneRepository, PhoneRepository>();
 
-//ADO.Net sql connection factory to share the efc connection:
-builder.Services.AddScoped<ISqlConnectionFactory, SqlConnectionFactory>();
 
-
-//EFC sql connection
 builder.Services.AddDbContext<SmsDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("SecretManagementServiceContext"));

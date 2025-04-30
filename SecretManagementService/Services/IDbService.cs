@@ -9,7 +9,7 @@ namespace SecretManagementService.Services;
 public interface IDbService
 {
     /// <summary>
-    /// Sets the session context variables for the current connection.
+    /// Sets the session context variables for the current connection in the used repositories.
     /// </summary>
     /// <param name="contextVariables"></param>
     /// <returns></returns>
