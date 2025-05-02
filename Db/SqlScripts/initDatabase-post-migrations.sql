@@ -7,6 +7,12 @@ CREATE USER [AppScopedUser_User] WITHOUT LOGIN; -- from the app, use EXECUTE AS 
 CREATE USER [AppScopedUser_ExternalAdmin] WITHOUT LOGIN;
 CREATE USER [AppScopedUser_InternalAdmin] WITHOUT LOGIN;
 
+--grant impersonating permissions to the app
+GRANT IMPERSONATE ON USER::[AppScopedUser_BackgroundTasks] TO [func-SecretManagementService-development-001];
+GRANT IMPERSONATE ON USER::[AppScopedUser_User] TO [func-SecretManagementService-development-001];
+GRANT IMPERSONATE ON USER::[AppScopedUser_ExternalAdmin] TO [func-SecretManagementService-development-001];
+GRANT IMPERSONATE ON USER::[AppScopedUser_InternalAdmin] TO [func-SecretManagementService-development-001];
+
 --create roles
 CREATE ROLE InternalAdminRole; -- inmune to rls
 CREATE ROLE ExternalAdminRole;

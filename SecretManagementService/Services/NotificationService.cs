@@ -23,11 +23,12 @@ public class NotificationService : INotificationService
         _emailService = emailService;
         _configuration = configuration;
         _smsService = smsService;
+
+        _dbService.SetExecutingUser("AppScopedUser_BackgroundTasks");
     }
 
     public async Task<SecretNotificationInfo> FetchNotificationInfoAsync(string secretId)
     {
-        //No sessioncontext required since it is the app requesting data directly
         var secretNotificationInfo = await _dbService.GetNotificationInfoAsync(secretId);
         if (secretNotificationInfo == null)
         {

@@ -2,6 +2,8 @@
 using Db.DbModels;
 using Db.Dtos;
 using Microsoft.Extensions.Configuration;
+using Db.Helpers;
+using Microsoft.EntityFrameworkCore;
 
 namespace Db.Repositories;
 
@@ -9,6 +11,7 @@ public class EmailRepository : IEmailRepository
 {
     private readonly string _connectionString;
     private Dictionary<string, object?> _sessionContext = new();
+    private string _executingUser = string.Empty;
 
     public EmailRepository(IConfiguration config)
     {
@@ -20,17 +23,9 @@ public class EmailRepository : IEmailRepository
     {
         _sessionContext = contextVariables ?? new();
     }
-
-    private async Task ApplySessionContextAsync(SqlConnection connection)
+    public void SetExecutingUser(string executingUser)
     {
-        foreach (var kvp in _sessionContext)
-        {
-            using var contextCmd = connection.CreateCommand();
-            contextCmd.CommandText = "EXEC sp_set_session_context @key = @Key, @value = @Value;";
-            contextCmd.Parameters.AddWithValue("@Key", kvp.Key);
-            contextCmd.Parameters.AddWithValue("@Value", kvp.Value ?? DBNull.Value);
-            await contextCmd.ExecuteNonQueryAsync();
-        }
+        _executingUser = executingUser;
     }
 
     public async Task<ResponsePageDto<Email>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false)
@@ -41,7 +36,8 @@ public class EmailRepository : IEmailRepository
 
         using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
-        await ApplySessionContextAsync(connection);
+        await SqlQueryInjector.ApplySessionContextAsync(connection, _sessionContext);
+        await SqlQueryInjector.ExecuteAsUserAsync(connection, _executingUser);
 
         using (var countCmd = connection.CreateCommand())
         {
@@ -87,7 +83,8 @@ public class EmailRepository : IEmailRepository
     {
         using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
-        await ApplySessionContextAsync(connection);
+        await SqlQueryInjector.ApplySessionContextAsync(connection, _sessionContext);
+        await SqlQueryInjector.ExecuteAsUserAsync(connection, _executingUser);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT EmailId, EmailAddress FROM suprusr.Emails WHERE EmailId = @Id";
@@ -110,7 +107,8 @@ public class EmailRepository : IEmailRepository
     {
         using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
-        await ApplySessionContextAsync(connection);
+        await SqlQueryInjector.ApplySessionContextAsync(connection, _sessionContext);
+        await SqlQueryInjector.ExecuteAsUserAsync(connection, _executingUser);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -128,7 +126,8 @@ public class EmailRepository : IEmailRepository
     {
         using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
-        await ApplySessionContextAsync(connection);
+        await SqlQueryInjector.ApplySessionContextAsync(connection, _sessionContext);
+        await SqlQueryInjector.ExecuteAsUserAsync(connection, _executingUser);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
@@ -151,7 +150,8 @@ public class EmailRepository : IEmailRepository
 
         using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
-        await ApplySessionContextAsync(connection);
+        await SqlQueryInjector.ApplySessionContextAsync(connection, _sessionContext);
+        await SqlQueryInjector.ExecuteAsUserAsync(connection, _executingUser);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "DELETE FROM suprusr.Emails WHERE EmailId = @EmailId";
@@ -167,7 +167,8 @@ public class EmailRepository : IEmailRepository
 
         using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
-        await ApplySessionContextAsync(connection);
+        await SqlQueryInjector.ApplySessionContextAsync(connection, _sessionContext);
+        await SqlQueryInjector.ExecuteAsUserAsync(connection, _executingUser);
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"

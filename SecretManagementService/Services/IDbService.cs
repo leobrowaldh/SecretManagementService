@@ -13,6 +13,7 @@ public interface IDbService
     /// </summary>
     /// <param name="contextVariables"></param>
     /// <returns></returns>
-    public void SetContext(Dictionary<string, object?> contextVariables);
+    void SetContext(Dictionary<string, object?> contextVariables);
+    void SetExecutingUser(string executingUser);
     public Task<SecretNotificationInfo?> GetNotificationInfoAsync(string secretId);
 }

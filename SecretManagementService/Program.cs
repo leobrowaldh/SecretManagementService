@@ -33,7 +33,7 @@ builder.Services.AddScoped<ISecretsService, SecretsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISmsService, SmsService>();
-builder.Services.AddScoped<IDbService, DbService>();
+builder.Services.AddScoped<IDbService, DbServiceMock2>(); //***MOCKING!!***
 
 //DbRepos
 builder.Services.AddScoped<IGenericRepository<Secret>, SecretRepository>();

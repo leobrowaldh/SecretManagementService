@@ -128,5 +128,15 @@ public class DbServiceMock : IDbService
         var notificationDto = _notifications.FirstOrDefault(n => n.SecretId == _secretIdToTry);
         return Task.FromResult(notificationDto);
     }
+
+    public void SetContext(Dictionary<string, object?> contextVariables)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void SetExecutingUser(string executingUser)
+    {
+        throw new NotImplementedException();
+    }
 }
 

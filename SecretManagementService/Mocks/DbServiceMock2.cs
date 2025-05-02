@@ -14,12 +14,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace SecretManagementService.Services;
-public class DbService : IDbService
+public class DbServiceMock2 : IDbService
 {
     private readonly IGenericRepository<Secret> _secretRepo;
     private readonly IPhoneRepository _phoneRepository;
     private readonly IEmailRepository _emailRepository;
-    public DbService(IGenericRepository<Secret> secretRepo, IPhoneRepository phoneRepository, IEmailRepository emailRepository)
+    public DbServiceMock2(IGenericRepository<Secret> secretRepo, IPhoneRepository phoneRepository, IEmailRepository emailRepository)
     {
         _secretRepo = secretRepo;
         _phoneRepository = phoneRepository;
@@ -39,8 +39,11 @@ public class DbService : IDbService
         _emailRepository.SetExecutingUser(executingUser);
     }
 
+    
     public async Task<SecretNotificationInfo?> GetNotificationInfoAsync(string secretId)
     {
+        //lets mock the secretid that match the seeded fake secret
+        secretId = "eb73be10-d7a9-4979-84c2-56be96f36fd0";
         // Step 1: Fetch the Secret entity with its non-sensitive fields (e.g., Subscriber, Application)
         var secret = await _secretRepo.ReadItemAsync(Guid.Parse(secretId), false);
 

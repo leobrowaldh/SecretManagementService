@@ -1,4 +1,5 @@
 ﻿using Db.Dtos;
+using Db.Helpers;
 using Db.Repositories;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     protected readonly DbContext _dbContext;
     protected readonly DbSet<T> _dbSet;
     private Dictionary<string, object?> _sessionContext = new();
+    private string _executingUser = string.Empty;
 
     public GenericRepository(DbContext dbContext)
     {
@@ -22,10 +24,15 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         _sessionContext = sessionContext;
     }
+    public void SetExecutingUser(string executingUser)
+    {
+        _executingUser = executingUser;
+    }
 
     public virtual async Task<ResponsePageDto<T>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false)
     {
-        await ConfigureContext();
+        await SqlQueryInjector.ApplySessionContextAsync(_dbContext.Database.GetDbConnection(), _sessionContext);
+        await SqlQueryInjector.ExecuteAsUserAsync(_dbContext.Database.GetDbConnection(), _executingUser);
 
         filter ??= "";
         filter = filter.ToLower();
@@ -48,16 +55,19 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public virtual async Task<T?> ReadItemAsync(Guid itemId, bool flat)
     {
-        await ConfigureContext();
+        await SqlQueryInjector.ApplySessionContextAsync(_dbContext.Database.GetDbConnection(), _sessionContext);
+        await SqlQueryInjector.ExecuteAsUserAsync(_dbContext.Database.GetDbConnection(), _executingUser);
 
         IQueryable<T> query = _dbSet.AsNoTracking();
         query = ApplyIncludes(query, flat);
-        return await query.FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == itemId);
+        var predicate = EFPrimaryKeyHelper.ByPrimaryKey<T>(_dbContext, itemId);
+        return await query.FirstOrDefaultAsync(predicate);
     }
 
     public virtual async Task<T> AddItemAsync(T item)
     {
-        await ConfigureContext();
+        await SqlQueryInjector.ApplySessionContextAsync(_dbContext.Database.GetDbConnection(), _sessionContext);
+        await SqlQueryInjector.ExecuteAsUserAsync(_dbContext.Database.GetDbConnection(), _executingUser);
 
         _dbSet.Add(item);
         await _dbContext.SaveChangesAsync();
@@ -66,7 +76,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public virtual async Task<T> UpdateItemAsync(T item)
     {
-        await ConfigureContext();
+        await SqlQueryInjector.ApplySessionContextAsync(_dbContext.Database.GetDbConnection(), _sessionContext);
+        await SqlQueryInjector.ExecuteAsUserAsync(_dbContext.Database.GetDbConnection(), _executingUser);
 
         _dbSet.Update(item);
         await _dbContext.SaveChangesAsync();
@@ -75,7 +86,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public virtual async Task<T> DeleteItemAsync(Guid itemId)
     {
-        await ConfigureContext();
+        await SqlQueryInjector.ApplySessionContextAsync(_dbContext.Database.GetDbConnection(), _sessionContext);
+        await SqlQueryInjector.ExecuteAsUserAsync(_dbContext.Database.GetDbConnection(), _executingUser);
 
         var item = await ReadItemAsync(itemId, true);
         if (item == null)
@@ -106,25 +118,5 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     }
 
     protected virtual IQueryable<T> ApplyCustomFilter(IQueryable<T> query, bool seeded, string filter) => query;
-
-    protected virtual async Task ConfigureContext()
-    {
-        if (_sessionContext == null || _sessionContext.Count == 0)
-            return;
-
-        var connection = (SqlConnection)_dbContext.Database.GetDbConnection();
-
-        if (connection.State != ConnectionState.Open)
-            await connection.OpenAsync();
-
-        foreach (var (key, value) in _sessionContext)
-        {
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = "EXEC sp_set_session_context @key, @value";
-            cmd.Parameters.AddWithValue("@key", key);
-            cmd.Parameters.AddWithValue("@value", value ?? DBNull.Value);
-            await cmd.ExecuteNonQueryAsync();
-        }
-    }
 
 }
