@@ -26,8 +26,13 @@ public static class ConfigurationExtensions
         var keyVaultUri = tempConfig["KEY_VAULT_URI"]
             ?? throw new ArgumentNullException("KEY_VAULT_URI not found in configuration");
 
-        var environment = tempConfig["ENVIRONMENT"]
-            ?? throw new ArgumentNullException("ENVIRONMENT not found in configuration");
+        var environment = tempConfig["ENVIRONMENT"];
+
+        if (string.IsNullOrEmpty(environment))
+        {
+            Console.WriteLine("ENVIRONMENT not found in configuration");
+        }
+
 
         var excludeLocalDevelopment = environment != "Local";
         var excludeManagedIdentity = !excludeLocalDevelopment;
