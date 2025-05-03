@@ -1,39 +1,24 @@
-# .NET Core Function App to Windows on Azure
-# Build a .NET Core function app and deploy it to Azure as a Windows function App.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/en-us/azure/devops/pipelines/languages/dotnet-core
+# .NET Core Function App to Linux on Azure
+# Build a .NET Core function app and deploy it to Azure as a Linux function App.
 
 trigger:
 - master
 - develop
 
 variables:
-  # Azure Resource Manager connection created during pipeline creation
   azureSubscription: 'InnofactorManagedComponents-ServiceConnection'
-
-  # Function app name
   functionAppName: 'func-secretmanagementservice-development-001'
-
-  # Agent VM image name
-  vmImageName: 'windows-latest'
-
-  # Working Directory
+  vmImageName: 'ubuntu-latest'
   workingDirectory: '$(System.DefaultWorkingDirectory)/SecretManagementService'
-
-  # Resource Group
   resourceGroup: 'LIA-ResourceGroup'
 
-  #Env variables
+  # Environment variables
   keyVaultUri: 'https://sms-appsecrets.vault.azure.net/'
   clientId: '4e72630e-e7a9-444f-8287-c7b704149746'
   tenantId: 'd87548be-2c3c-454d-8214-8941643fc99f'
-  #Needed for ConfigureKeyVault method in Program.cs:
   environment: 'Development'
-  #hostId must be less than 32 chars to avoid name collisions caused by truncation:
   hostId: 'func-secretmgmt-dev-001'
-  #Configures when notification of expiring secrets should occur
   daysUntilSecretsExpire: '30'
-  
 
 stages:
 - stage: Build
@@ -47,23 +32,24 @@ stages:
 
     steps:
     - task: DotNetCoreCLI@2
-      displayName: Build
+      displayName: 'Publish Function App'
       inputs:
-        command: 'build'
+        command: 'publish'
+        publishWebProjects: false
         projects: |
           $(workingDirectory)/*.csproj
-        arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
+        arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)/publish_output'
 
     - task: ArchiveFiles@2
       displayName: 'Archive files'
       inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish_output'
         includeRootFolder: false
         archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
         replaceExistingArchive: true
 
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+    - publish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
       artifact: drop
 
 - stage: Deploy
@@ -72,7 +58,6 @@ stages:
   condition: succeeded()
 
   jobs:
-  
   - deployment: Deploy
     displayName: Deploy
     environment: 'development'
@@ -82,9 +67,7 @@ stages:
     strategy:
       runOnce:
         deploy:
-
           steps:
-
           - task: AzureFunctionApp@2
             displayName: 'Azure functions app deploy'
             inputs:
@@ -93,11 +76,11 @@ stages:
               appType: 'functionAppLinux'
               appName: $(functionAppName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              runtimeStack:  'DOTNET-ISOLATED|9.0'
+              runtimeStack: 'DOTNET-ISOLATED|9.0'
               appSettings: >
                 -KEY_VAULT_URI $(keyVaultUri)
                 -CLIENT_ID $(clientId)
                 -TENANT_ID $(tenantId)
                 -AzureFunctionsWebHost__hostid $(hostId)
-                -ASPNETCORE_ENVIRONMENT $(environment)
+                -ENVIRONMENT $(environment)
                 -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
