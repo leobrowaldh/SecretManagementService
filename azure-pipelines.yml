@@ -31,6 +31,12 @@ stages:
       vmImage: $(vmImageName)
 
     steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '9.0.x'
+        includePreviewVersions: true # Needed for .NET 9 preview builds
+
     - task: DotNetCoreCLI@2
       displayName: 'Publish Function App'
       inputs:
@@ -76,7 +82,7 @@ stages:
               appType: 'functionAppLinux'
               appName: $(functionAppName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              #runtimeStack: 'DOTNET-ISOLATED|9.0'
+              runtimeStack: 'DOTNET-ISOLATED|9.0'
               appSettings: >
                 -KEY_VAULT_URI $(keyVaultUri)
                 -CLIENT_ID $(clientId)
