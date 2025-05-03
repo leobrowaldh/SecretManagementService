@@ -82,5 +82,5 @@ stages:
                 -CLIENT_ID $(clientId)
                 -TENANT_ID $(tenantId)
                 -AzureFunctionsWebHost__hostid $(hostId)
-                -ASPNETCORE_ENVIRONMENT $(environment)
+                -ENVIRONMENT $(environment)
                 -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
