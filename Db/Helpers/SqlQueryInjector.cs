@@ -13,6 +13,30 @@ namespace Db.Helpers;
 //Helper methods to modify the SQL query that works with both ADO and EFC 
 public class SqlQueryInjector
 {
+
+    public static async Task<TResult> RunWithUserAsync<TResult>(
+    DbConnection connection,
+    Dictionary<string, object?> sessionContext,
+    string executingUser,
+    Func<Task<TResult>> action)
+    {
+        if (connection.State != ConnectionState.Open)
+            await connection.OpenAsync();
+
+        try
+        {
+            await ApplySessionContextAsync(connection, sessionContext);
+            await ExecuteAsUserAsync(connection, executingUser);
+
+            return await action();
+        }
+        finally
+        {
+            await RevertAsync(connection);
+        }
+    }
+
+
     /// <summary>
     /// Applies the session context to the connection.
     /// </summary>
@@ -64,70 +88,15 @@ public class SqlQueryInjector
         command.Parameters.Add(param);
         await command.ExecuteNonQueryAsync();
     }
-    /// <summary>
-    /// Executes a Task<T> returning method as a specific user.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="connection"></param>
-    /// <param name="userName"></param>
-    /// <param name="action"></param>
-    /// <returns></returns>
-    public static async Task<T> ExecuteAsUserAsync<T>(DbConnection connection, string userName, Func<Task<T>> action)
+    
+
+    public static async Task RevertAsync(DbConnection connection)
     {
         if (connection.State != ConnectionState.Open)
             await connection.OpenAsync();
 
         using var command = connection.CreateCommand();
-        command.CommandText = "EXECUTE AS USER = @user;";
-        var param = command.CreateParameter();
-        param.ParameterName = "@user";
-        param.Value = userName;
-        command.Parameters.Add(param);
+        command.CommandText = "REVERT;";
         await command.ExecuteNonQueryAsync();
-
-        try
-        {
-            return await action();
-        }
-        finally
-        {
-            using var revertCommand = connection.CreateCommand();
-            revertCommand.CommandText = "REVERT;";
-            await revertCommand.ExecuteNonQueryAsync();
-        }
     }
-
-    /// <summary>
-    /// Executes a Task returning method as a specific user.
-    /// </summary>
-    /// <param name="connection"></param>
-    /// <param name="userName"></param>
-    /// <param name="action"></param>
-    /// <returns></returns>
-    public static async Task ExecuteAsUserAsync(DbConnection connection, string userName, Func<Task> action)
-    {
-        if (connection.State != ConnectionState.Open)
-            await connection.OpenAsync();
-
-        using var command = connection.CreateCommand();
-        command.CommandText = "EXECUTE AS USER = @user;";
-        var param = command.CreateParameter();
-        param.ParameterName = "@user";
-        param.Value = userName;
-        command.Parameters.Add(param);
-        await command.ExecuteNonQueryAsync();
-
-        try
-        {
-            await action();
-        }
-        finally
-        {
-            using var revertCommand = connection.CreateCommand();
-            revertCommand.CommandText = "REVERT;";
-            await revertCommand.ExecuteNonQueryAsync();
-        }
-    }
-
-
 }

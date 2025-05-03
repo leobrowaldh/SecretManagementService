@@ -9,6 +9,7 @@ using SecretManagementService.Models.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,17 +46,21 @@ public class DbServiceMock2 : IDbService
         //lets mock the secretid that match the seeded fake secret
         secretId = "eb73be10-d7a9-4979-84c2-56be96f36fd0";
         // Step 1: Fetch the Secret entity with its non-sensitive fields (e.g., Subscriber, Application)
+        var sw = Stopwatch.StartNew();
         var secret = await _secretRepo.ReadItemAsync(Guid.Parse(secretId), false);
+        Console.WriteLine($"[Perf] _secretRepo.ReadItemAsync took {sw.ElapsedMilliseconds}ms");
 
         if (secret == null)
         {
             return null;
         }
-
+        sw.Restart();
         // Step 2: Fetch the encrypted Phones, Emails separately using your ADO.NET repositories
         var phones = await _phoneRepository.GetPhonesBySecretIdAsync(secret.SecretId); // ADO.NET call for Phones (decrypting)
+        Console.WriteLine($"[Perf] _phoneRepository.GetPhonesBySecretIdAsync took {sw.ElapsedMilliseconds}ms");
+        sw.Restart();
         var emails = await _emailRepository.GetEmailsBySecretIdAsync(secret.SecretId); // ADO.NET call for Emails (decrypting)
-
+        Console.WriteLine($"[Perf] _emailRepository.GetEmailsBySecretIdAsync took {sw.ElapsedMilliseconds}ms");
         // Step 3: Map everything into the SecretNotificationInfo object
         var notificationInfo = new SecretNotificationInfo
         {
