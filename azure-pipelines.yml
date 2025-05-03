@@ -76,7 +76,7 @@ stages:
               appType: 'functionAppLinux'
               appName: $(functionAppName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              runtimeStack: 'DOTNET-ISOLATED|9.0'
+              #runtimeStack: 'DOTNET-ISOLATED|9.0'
               appSettings: >
                 -KEY_VAULT_URI $(keyVaultUri)
                 -CLIENT_ID $(clientId)
