@@ -51,11 +51,11 @@ stages:
       inputs:
         rootFolderOrFile: "$(System.DefaultWorkingDirectory)/publish_output"
         includeRootFolder: false
-        archiveFile: "$(System.DefaultWorkingDirectory)/build$(Build.BuildId).zip"
+        archiveFile: "$(Build.ArtifactStagingDirectory)/build$(Build.BuildId).zip"
 
     - task: PublishPipelineArtifact@1
       inputs:
-        targetPath: '$(System.DefaultWorkingDirectory)/build$(Build.BuildId).zip'
+        targetPath: '$(Build.ArtifactStagingDirectory)/build$(Build.BuildId).zip'
         artifact: 'drop'
 
 - stage: Deploy
@@ -81,7 +81,7 @@ stages:
               azureSubscription: $(serviceConnection)
               appType: functionAppLinux
               appName: $(functionAppName)
-              package: $(System.ArtifactsDirectory)/**/*.zip
+              package: '$(Build.ArtifactStagingDirectory)/build$(Build.BuildId).zip'
               deploymentMethod: 'auto'
               appSettings: >
                 -KEY_VAULT_URI $(keyVaultUri)
