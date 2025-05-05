@@ -42,7 +42,7 @@ stages:
         command: 'publish'
         publishWebProjects: false
         arguments: '--configuration Release --output publish_output'
-        projects: '$(workingDirectory)/*.sln'
+        projects: '**/*.sln'
         modifyOutputPath: false
         zipAfterPublish: false
 
