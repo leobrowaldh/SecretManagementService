@@ -100,7 +100,9 @@ stages:
                     appName: $(functionAppName)
                     package: '$(Pipeline.Workspace)/drop/**/*.zip'
                     deploymentMethod: 'auto'
+                    runtimeStack: 'DOTNET-ISOLATED|9.0'
                     appSettings: >
+                      -FUNCTIONS_WORKER_RUNTIME dotnet-isolated
                       -KEY_VAULT_URI $(keyVaultUri)
                       -CLIENT_ID $(clientId)
                       -TENANT_ID $(tenantId)
