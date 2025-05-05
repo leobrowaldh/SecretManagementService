@@ -45,17 +45,9 @@ stages:
         projects: |
           $(workingDirectory)/*.csproj
         arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)/publish_output'
+        zipAfterPublish: true
 
-    - task: ArchiveFiles@2
-      displayName: 'Archive files'
-      inputs:
-        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish_output'
-        includeRootFolder: false
-        archiveType: zip
-        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-        replaceExistingArchive: true
-
-    - publish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    - publish: '$(Build.ArtifactStagingDirectory)/publish_output.zip'
       artifact: drop
 
 - stage: Deploy
@@ -81,7 +73,7 @@ stages:
               connectedServiceNameARM: $(azureSubscription)
               appType: 'functionAppLinux'
               appName: $(functionAppName)
-              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              package: '$(Pipeline.Workspace)/drop/publish_output.zip'
               runtimeStack: 'DOTNET-ISOLATED|9.0'
               appSettings: >
                 -KEY_VAULT_URI $(keyVaultUri)
