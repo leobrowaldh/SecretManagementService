@@ -47,8 +47,10 @@ stages:
         arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)/publish_output'
         zipAfterPublish: true
 
-    - publish: '$(Build.ArtifactStagingDirectory)/publish_output.zip'
-      artifact: drop
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/publish_output'
+        artifact: 'drop'
 
 - stage: Deploy
   displayName: Deploy stage
@@ -73,7 +75,7 @@ stages:
               connectedServiceNameARM: $(azureSubscription)
               appType: 'functionAppLinux'
               appName: $(functionAppName)
-              package: '$(Pipeline.Workspace)/drop/publish_output.zip'
+              package: '$(Pipeline.Workspace)/drop/*.zip'
               runtimeStack: 'DOTNET-ISOLATED|9.0'
               appSettings: >
                 -KEY_VAULT_URI $(keyVaultUri)
@@ -82,4 +84,3 @@ stages:
                 -AzureFunctionsWebHost__hostid $(hostId)
                 -ASPNETCORE_ENVIRONMENT $(environment)
                 -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
-
