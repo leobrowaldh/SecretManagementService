@@ -27,14 +27,14 @@ stages:
       vmImage: $(vmImageName)
 
     steps:
-    - script: |
-        dotnet restore
-        dotnet build --configuration Release
     - task: UseDotNet@2
       inputs:
         packageType: 'sdk'
         version: '9.0.x'
         includePreviewVersions: true
+    - script: |
+        dotnet restore
+        dotnet build --configuration Release
 
     - task: DotNetCoreCLI@2
       displayName: 'Publish Function App'
