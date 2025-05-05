@@ -1,15 +1,15 @@
 trigger:
-- master
-- develop
+  - master
+  - develop
 
 variables:
+  # Azure resources
   serviceConnection: 'InnofactorManagedComponents-ServiceConnection'
   functionAppName: 'func-secretmanagementservice-development-001'
   vmImageName: 'ubuntu-latest'
+  # Path to the solution root containing your Function App project
   workingDirectory: '$(System.DefaultWorkingDirectory)/SecretManagementService'
-  resourceGroup: 'LIA-ResourceGroup'
-
-  # Environment variables
+  # Environment settings
   keyVaultUri: 'https://sms-appsecrets.vault.azure.net/'
   clientId: '4e72630e-e7a9-444f-8287-c7b704149746'
   tenantId: 'd87548be-2c3c-454d-8214-8941643fc99f'
@@ -18,76 +18,92 @@ variables:
   daysUntilSecretsExpire: '30'
 
 stages:
-- stage: Build
-  displayName: Build stage
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      vmImage: $(vmImageName)
+  - stage: Build
+    displayName: Build Stage
+    jobs:
+      - job: Build
+        displayName: Build
+        pool:
+          vmImage: $(vmImageName)
 
-    steps:
-    - task: UseDotNet@2
-      inputs:
-        packageType: 'sdk'
-        version: '9.0.x'
-        includePreviewVersions: true
-    - script: |
-        dotnet restore
-        dotnet build --configuration Release
-
-    - task: DotNetCoreCLI@2
-      displayName: 'Publish Function App'
-      inputs:
-        command: 'publish'
-        publishWebProjects: false
-        arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)/publish_output'
-        projects: '**/*.sln'
-        modifyOutputPath: false
-        zipAfterPublish: false
-
-    - task: ArchiveFiles@2
-      displayName: 'Zip published output'
-      inputs:
-        rootFolderOrFile: "$(Build.ArtifactStagingDirectory)/publish_output"
-        includeRootFolder: false
-        archiveFile: "$(Build.ArtifactStagingDirectory)/build$(Build.BuildId).zip"
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)/build$(Build.BuildId).zip'
-        artifact: 'drop'
-
-- stage: Deploy
-  displayName: Deploy stage
-  dependsOn: Build
-  condition: succeeded()
-
-  jobs:
-  - deployment: Deploy
-    displayName: Deploy to Azure Function
-    environment: 'development'
-    pool:
-      vmImage: $(vmImageName)
-
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: AzureFunctionApp@2
-            displayName: 'Deploy Function App'
+        steps:
+          # 1. Install .NET 9.0 SDK
+          - task: UseDotNet@2
+            displayName: 'Install .NET 9.0 SDK'
             inputs:
-              isFlexConsumption: true
-              azureSubscription: $(serviceConnection)
-              appType: functionAppLinux
-              appName: $(functionAppName)
-              package: '$(Build.ArtifactStagingDirectory)/build$(Build.BuildId).zip'
-              deploymentMethod: 'auto'
-              appSettings: >
-                -KEY_VAULT_URI $(keyVaultUri)
-                -CLIENT_ID $(clientId)
-                -TENANT_ID $(tenantId)
-                -AzureFunctionsWebHost__hostid $(hostId)
-                -ASPNETCORE_ENVIRONMENT $(environment)
-                -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
+              packageType: 'sdk'
+              version: '9.0.x'
+              includePreviewVersions: true
 
+          # 2. Restore & Build
+          - script: |
+              dotnet restore
+              dotnet build --configuration Release
+            displayName: 'Restore and Build Solution'
+
+          # 3. Publish only the Function App project
+          - task: DotNetCoreCLI@2
+            displayName: 'Publish SMSFunctionApp'
+            inputs:
+              command: 'publish'
+              publishWebProjects: false
+              projects: '$(workingDirectory)/SMSFunctionApp/SMSFunctionApp.csproj'
+              arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)/publish_output'
+              zipAfterPublish: false
+              modifyOutputPath: false
+
+          # 4. Archive the published output
+          - task: ArchiveFiles@2
+            displayName: 'Archive published output'
+            inputs:
+              rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish_output'
+              includeRootFolder: false
+              archiveFile: '$(Build.ArtifactStagingDirectory)/build$(Build.BuildId).zip'
+
+          # 5. Publish as pipeline artifact
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Artifact: drop'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/build$(Build.BuildId).zip'
+              artifact: 'drop'
+
+  - stage: Deploy
+    displayName: Deploy Stage
+    dependsOn: Build
+    condition: succeeded()
+
+    jobs:
+      - deployment: Deploy
+        displayName: Deploy to Azure Function
+        environment: 'development'
+        pool:
+          vmImage: $(vmImageName)
+
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # 1. Download the 'drop' artifact
+                - task: DownloadPipelineArtifact@2
+                  displayName: 'Download Artifact: drop'
+                  inputs:
+                    artifact: 'drop'
+                    targetPath: '$(Pipeline.Workspace)'
+
+                # 2. Deploy Function App
+                - task: AzureFunctionApp@2
+                  displayName: 'Deploy Function App'
+                  inputs:
+                    azureSubscription: $(serviceConnection)
+                    appType: functionAppLinux
+                    isFlexConsumption: true
+                    appName: $(functionAppName)
+                    package: '$(Pipeline.Workspace)/drop/**/*.zip'
+                    deploymentMethod: 'auto'
+                    appSettings: >
+                      -KEY_VAULT_URI $(keyVaultUri)
+                      -CLIENT_ID $(clientId)
+                      -TENANT_ID $(tenantId)
+                      -AzureFunctionsWebHost__hostid $(hostId)
+                      -ASPNETCORE_ENVIRONMENT $(environment)
+                      -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
