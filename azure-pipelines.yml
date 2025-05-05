@@ -3,7 +3,7 @@ trigger:
 - develop
 
 variables:
-  azureSubscription: 'InnofactorManagedComponents-ServiceConnection'
+  serviceConnection: 'InnofactorManagedComponents-ServiceConnection'
   functionAppName: 'func-secretmanagementservice-development-001'
   vmImageName: 'ubuntu-latest'
   workingDirectory: '$(System.DefaultWorkingDirectory)/SecretManagementService'
@@ -27,6 +27,9 @@ stages:
       vmImage: $(vmImageName)
 
     steps:
+    - script: |
+        dotnet restore
+        dotnet build --configuration Release
     - task: UseDotNet@2
       inputs:
         packageType: 'sdk'
@@ -38,25 +41,22 @@ stages:
       inputs:
         command: 'publish'
         publishWebProjects: false
-        projects: |
-          $(workingDirectory)/*.csproj
-        arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)/publish_output'
+        arguments: '--configuration Release --output publish_output'
+        projects: '$(workingDirectory)/*.sln'
+        modifyOutputPath: false
         zipAfterPublish: false
 
     - task: ArchiveFiles@2
       displayName: 'Zip published output'
       inputs:
-        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish_output'
+        rootFolderOrFile: "$(System.DefaultWorkingDirectory)/publish_output"
         includeRootFolder: false
-        archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/publish_output.zip'
-        replaceExistingArchive: true
+        archiveFile: "$(System.DefaultWorkingDirectory)/build$(Build.BuildId).zip"
 
     - task: PublishPipelineArtifact@1
       inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)/publish_output.zip'
+        targetPath: '$(System.DefaultWorkingDirectory)/build$(Build.BuildId).zip'
         artifact: 'drop'
-        publishLocation: 'pipeline'
 
 - stage: Deploy
   displayName: Deploy stage
@@ -78,11 +78,11 @@ stages:
             displayName: 'Deploy Function App'
             inputs:
               isFlexConsumption: true
-              connectedServiceNameARM: $(azureSubscription)
-              appType: 'functionAppLinux'
+              azureSubscription: $(serviceConnection)
+              appType: functionAppLinux
               appName: $(functionAppName)
-              package: '$(Pipeline.Workspace)/drop/publish_output.zip'
-              runtimeStack: 'DOTNET-ISOLATED|9.0'
+              package: $(System.ArtifactsDirectory)/**/*.zip
+              deploymentMethod: 'auto'
               appSettings: >
                 -KEY_VAULT_URI $(keyVaultUri)
                 -CLIENT_ID $(clientId)
@@ -90,3 +90,4 @@ stages:
                 -AzureFunctionsWebHost__hostid $(hostId)
                 -ASPNETCORE_ENVIRONMENT $(environment)
                 -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
+
