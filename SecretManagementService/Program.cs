@@ -14,10 +14,20 @@ using Db.Repositories;
 using Db.DbModels;
 using Microsoft.Data.SqlClient;
 using Db.Factories;
+using Db.Helpers;
+using Azure.Identity;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
-builder.Configuration.ConfigureKeyVault();
+//builder.Configuration.ConfigureKeyVault();
+
+var keyVaultUri = builder.Configuration["KEY_VAULT_URI"];
+
+if (string.IsNullOrEmpty(keyVaultUri))
+{
+    Console.WriteLine("KEY_VAULT_URI not found in configuration");
+}
+else { builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential()); }
 
 builder.ConfigureFunctionsWebApplication();
 
@@ -80,6 +90,10 @@ builder.Services.AddSendGrid(options =>
     options.ApiKey = sendGridApiKey;
 });
 
+//only needed for local dev, azure takes care of it on cloud.
+#if DEBUG
+SqlAlwaysEncryptedLocalConfig.RegisterAzureKeyVaultProvider();
+#endif
 
 builder.Build().Run();
 

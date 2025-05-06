@@ -30,7 +30,7 @@ public static class ConfigurationExtensions
 
         if (string.IsNullOrEmpty(environment))
         {
-            Console.WriteLine("ENVIRONMENT not found in configuration");
+            Console.WriteLine("ENVIRONMENT not found in configuration, this only matters in local dev.");
         }
 
 

@@ -7,11 +7,15 @@ CREATE USER [AppScopedUser_User] WITHOUT LOGIN; -- from the app, use EXECUTE AS 
 CREATE USER [AppScopedUser_ExternalAdmin] WITHOUT LOGIN;
 CREATE USER [AppScopedUser_InternalAdmin] WITHOUT LOGIN;
 
+CREATE USER [leo.browaldh@innofactor.com] FROM EXTERNAL PROVIDER;
+
 --grant impersonating permissions to the app
 GRANT IMPERSONATE ON USER::[AppScopedUser_BackgroundTasks] TO [func-SecretManagementService-development-001];
 GRANT IMPERSONATE ON USER::[AppScopedUser_User] TO [func-SecretManagementService-development-001];
 GRANT IMPERSONATE ON USER::[AppScopedUser_ExternalAdmin] TO [func-SecretManagementService-development-001];
 GRANT IMPERSONATE ON USER::[AppScopedUser_InternalAdmin] TO [func-SecretManagementService-development-001];
+
+GRANT IMPERSONATE ON USER::[AppScopedUser_BackgroundTasks] TO [leo.browaldh@innofactor.com];
 
 --create roles
 CREATE ROLE InternalAdminRole; -- inmune to rls
@@ -39,6 +43,21 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON usr.Secrets TO UserRole;
 --Function app read contact info and update notification Dates
 GRANT SELECT, UPDATE ON SCHEMA::usr TO NotificationFunctionAppRole;
 GRANT SELECT ON SCHEMA::suprusr TO NotificationFunctionAppRole;
+
+--Granting decrypting capabilities to the managed identity
+GRANT VIEW ANY COLUMN MASTER KEY DEFINITION TO [func-SecretManagementService-development-001];
+GRANT VIEW ANY COLUMN ENCRYPTION KEY DEFINITION TO [func-SecretManagementService-development-001];
+GRANT VIEW ANY COLUMN MASTER KEY DEFINITION TO [AppScopedUser_BackgroundTasks];
+GRANT VIEW ANY COLUMN ENCRYPTION KEY DEFINITION TO [AppScopedUser_BackgroundTasks];
+GRANT VIEW ANY COLUMN MASTER KEY DEFINITION TO [AppScopedUser_User];
+GRANT VIEW ANY COLUMN ENCRYPTION KEY DEFINITION TO [AppScopedUser_User];
+GRANT VIEW ANY COLUMN MASTER KEY DEFINITION TO [AppScopedUser_ExternalAdmin];
+GRANT VIEW ANY COLUMN ENCRYPTION KEY DEFINITION TO [AppScopedUser_ExternalAdmin];
+GRANT VIEW ANY COLUMN MASTER KEY DEFINITION TO [AppScopedUser_InternalAdmin];
+GRANT VIEW ANY COLUMN ENCRYPTION KEY DEFINITION TO [AppScopedUser_InternalAdmin];
+
+GRANT VIEW ANY COLUMN MASTER KEY DEFINITION TO [leo.browaldh@innofactor.com];
+GRANT VIEW ANY COLUMN ENCRYPTION KEY DEFINITION TO [leo.browaldh@innofactor.com];
 GO
 
 
