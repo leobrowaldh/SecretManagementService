@@ -26,7 +26,7 @@ public class FetchExpiringSecrets
     }
 
     [Function(nameof(FetchExpiringSecrets))]
-    [QueueOutput("expiringSecrets-queue")]  //  This binds the function output to the queue
+    [QueueOutput("expiringsecrets-queue")]  //  This binds the function output to the queue
     public async Task<IList<string>?> FetchSecretsAsync(
         [TimerTrigger("0 0 8 * * *", RunOnStartup = true)] TimerInfo myTimer)
     {

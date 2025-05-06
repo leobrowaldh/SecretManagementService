@@ -20,6 +20,7 @@ using Azure.Identity;
 var builder = FunctionsApplication.CreateBuilder(args);
 
 //builder.Configuration.ConfigureKeyVault();
+//not working when deployed
 
 var keyVaultUri = builder.Configuration["KEY_VAULT_URI"];
 
@@ -27,6 +28,7 @@ if (string.IsNullOrEmpty(keyVaultUri))
 {
     Console.WriteLine("KEY_VAULT_URI not found in configuration");
 }
+//TODO: optimize DefaultAzureCredential
 else { builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential()); }
 
 builder.ConfigureFunctionsWebApplication();
