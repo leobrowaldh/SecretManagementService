@@ -92,10 +92,8 @@ builder.Services.AddSendGrid(options =>
     options.ApiKey = sendGridApiKey;
 });
 
-//only needed for local dev, azure takes care of it on cloud.
-#if DEBUG
+
 SqlAlwaysEncryptedLocalConfig.RegisterAzureKeyVaultProvider();
-#endif
 
 builder.Build().Run();
 
