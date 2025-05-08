@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Db.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class initialcreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -51,12 +51,24 @@ namespace Db.Migrations
                 columns: table => new
                 {
                     SubscriberId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MicrosoftGraphOwnerId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubscriberIdentifier = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Seeded = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Subscribers", x => x.SubscriberId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                schema: "suprusr",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.UserId);
                 });
 
             migrationBuilder.CreateTable(
@@ -78,6 +90,33 @@ namespace Db.Migrations
                         principalSchema: "suprusr",
                         principalTable: "Subscribers",
                         principalColumn: "SubscriberId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SubscriberUser",
+                schema: "suprusr",
+                columns: table => new
+                {
+                    SubscribersSubscriberId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UsersUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubscriberUser", x => new { x.SubscribersSubscriberId, x.UsersUserId });
+                    table.ForeignKey(
+                        name: "FK_SubscriberUser_Subscribers_SubscribersSubscriberId",
+                        column: x => x.SubscribersSubscriberId,
+                        principalSchema: "suprusr",
+                        principalTable: "Subscribers",
+                        principalColumn: "SubscriberId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SubscriberUser_Users_UsersUserId",
+                        column: x => x.UsersUserId,
+                        principalSchema: "suprusr",
+                        principalTable: "Users",
+                        principalColumn: "UserId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -231,6 +270,12 @@ namespace Db.Migrations
                 schema: "usr",
                 table: "Secrets",
                 column: "SubscriberId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubscriberUser_UsersUserId",
+                schema: "suprusr",
+                table: "SubscriberUser",
+                column: "UsersUserId");
         }
 
         /// <inheritdoc />
@@ -249,6 +294,10 @@ namespace Db.Migrations
                 schema: "suprusr");
 
             migrationBuilder.DropTable(
+                name: "SubscriberUser",
+                schema: "suprusr");
+
+            migrationBuilder.DropTable(
                 name: "Emails",
                 schema: "suprusr");
 
@@ -259,6 +308,10 @@ namespace Db.Migrations
             migrationBuilder.DropTable(
                 name: "Secrets",
                 schema: "usr");
+
+            migrationBuilder.DropTable(
+                name: "Users",
+                schema: "suprusr");
 
             migrationBuilder.DropTable(
                 name: "Applications",

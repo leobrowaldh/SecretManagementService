@@ -21,6 +21,7 @@ public class SmsDbContext: DbContext
     public DbSet<ApiEndpoint> ApiEndpoints { get; set; }
     public DbSet<Application> Applications { get; set; }
     public DbSet<Secret> Secrets { get; set; }
+    public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

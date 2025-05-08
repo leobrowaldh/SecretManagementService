@@ -25,7 +25,7 @@ public class ProcessExpiringSecrets
 
     [Function(nameof(ProcessExpiringSecrets))]
     public async Task ProcessSecretsAsync(
-        [QueueTrigger("expiringsecrets-queue")] string message, FunctionContext context)
+        [QueueTrigger("expiringsecrets-queue")] CancellationToken cancellationToken, string message, FunctionContext context)
     {
         //another way of creating a logger, using functionContext, which provide function execution context.
         var logger = context.GetLogger("ProcessExpiringSecrets");

@@ -11,9 +11,10 @@ namespace Db.DbModels;
 public class Subscriber
 {
     public Guid SubscriberId { get; set; }
-    public String? MicrosoftGraphOwnerId { get; set; }
+    public String? SubscriberIdentifier { get; set; }
     public bool Seeded { get; set; }
 
     public List<Application> Applications { get; set; } = [];
     public List<Secret> Secrets { get; set; } = [];
+    public List<User> Users { get; set; } = [];
 }

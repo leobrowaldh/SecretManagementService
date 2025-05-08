@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Net.Http;
 using System.Text.Json;
 
 namespace SecretManagementService.Services;

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Db.Migrations
 {
     [DbContext(typeof(SmsDbContext))]
-    [Migration("20250414133204_initial")]
-    partial class initial
+    [Migration("20250508132256_initial-create")]
+    partial class initialcreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -179,15 +179,26 @@ namespace Db.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("MicrosoftGraphOwnerId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("Seeded")
                         .HasColumnType("bit");
+
+                    b.Property<string>("SubscriberIdentifier")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SubscriberId");
 
                     b.ToTable("Subscribers", "suprusr");
+                });
+
+            modelBuilder.Entity("Db.DbModels.User", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("Users", "suprusr");
                 });
 
             modelBuilder.Entity("EmailSecret", b =>
@@ -218,6 +229,21 @@ namespace Db.Migrations
                     b.HasIndex("SecretsSecretId");
 
                     b.ToTable("PhoneSecret", "suprusr");
+                });
+
+            modelBuilder.Entity("SubscriberUser", b =>
+                {
+                    b.Property<Guid>("SubscribersSubscriberId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UsersUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("SubscribersSubscriberId", "UsersUserId");
+
+                    b.HasIndex("UsersUserId");
+
+                    b.ToTable("SubscriberUser", "suprusr");
                 });
 
             modelBuilder.Entity("Db.DbModels.ApiEndpoint", b =>
@@ -283,6 +309,21 @@ namespace Db.Migrations
                     b.HasOne("Db.DbModels.Secret", null)
                         .WithMany()
                         .HasForeignKey("SecretsSecretId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SubscriberUser", b =>
+                {
+                    b.HasOne("Db.DbModels.Subscriber", null)
+                        .WithMany()
+                        .HasForeignKey("SubscribersSubscriberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Db.DbModels.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
