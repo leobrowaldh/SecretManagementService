@@ -1,16 +1,17 @@
 ﻿using Microsoft.Extensions.Configuration;
+using SecretManagementService.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SecretManagementService.Models.Dtos;
+namespace SMSFunctionApp.Models;
 public class SecretNotificationInfo
 {
     public int DaysUntilSecretExpires { get; set; }
-    public required string SecretId { get; set; }
-    public required string AppId { get; set; }
+    public required Guid SecretId { get; set; }
+    public required Guid AppId { get; set; }
     public string? DisplayName { get; set; }
     public string?[]? OwnerId { get; set; }
     public required DateTime EndDateTime { get; set; }
@@ -25,7 +26,7 @@ public class SecretNotificationInfo
     public bool ShouldNotify =>
         LastTimeNotified == null ||
         LastTimeNotified < DateTime.UtcNow.AddDays(-(DaysUntilSecretExpires / 2)) ||
-        (EndDateTime < DateTime.UtcNow.AddDays(5) && LastTimeNotified < DateTime.UtcNow.AddDays(-5)) ||
+        EndDateTime < DateTime.UtcNow.AddDays(5) && LastTimeNotified < DateTime.UtcNow.AddDays(-5) ||
         EndDateTime.Day == DateTime.UtcNow.Day;
 
 }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SecretManagementService.Models.Dtos;
+using SMSFunctionApp.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +27,7 @@ public class NotificationService : INotificationService
         _dbService.SetExecutingUser("AppScopedUser_BackgroundTasks");
     }
 
-    public async Task<SecretNotificationInfo> FetchNotificationInfoAsync(string secretId)
+    public async Task<SecretNotificationInfo> FetchNotificationInfoAsync(Guid secretId)
     {
         var secretNotificationInfo = await _dbService.GetNotificationInfoAsync(secretId);
         if (secretNotificationInfo == null)
@@ -50,6 +50,7 @@ public class NotificationService : INotificationService
                     $"<p>Your secret <strong>{secretNotificationInfo.DisplayName}</strong> is expiring on {secretNotificationInfo.EndDateTime}.</p>" +
                     $"<p>Access your account: <a href='{_configuration["SMS_URL"]}'>{_configuration["SMS_URL"]}</a></p>");
             }
+            await _dbService.UpdateLastNotifiedAsync(secretNotificationInfo.SecretId, DateTime.UtcNow);
         }
         if (secretNotificationInfo.ContactMethod.IsSMS)
         {
@@ -68,5 +69,6 @@ public class NotificationService : INotificationService
         {
             //send api request
         }
+        else { _logger.LogWarning("No contact method found for secret {SecretId}", secretNotificationInfo.SecretId); }
     }
 }

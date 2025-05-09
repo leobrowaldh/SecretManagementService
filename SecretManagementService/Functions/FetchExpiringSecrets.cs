@@ -1,13 +1,7 @@
-using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using SecretManagementService.Models;
-using SecretManagementService.Models.Response;
 using SecretManagementService.Services;
-using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 
 namespace SecretManagementService.Functions;
@@ -32,7 +26,7 @@ public class FetchExpiringSecrets
     {
         _logger.LogInformation("Timer trigger function FetchExpiringSecrets executed at: {Current DateTime}", DateTime.Now);
 
-        var expiringSecrets = await _secretsService.GetExpiringSecrets(_daysUntilSecretsExpire);
+        var expiringSecrets = await _secretsService.GetExpiringSecretsAsync(_daysUntilSecretsExpire);
 
         if (expiringSecrets == null || expiringSecrets.Count == 0)
         {

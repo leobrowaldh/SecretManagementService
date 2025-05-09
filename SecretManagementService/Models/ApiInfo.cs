@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace SecretManagementService.Models;
 public class ApiInfo
 {
-    public required string SecretId { get; init; } // Identifier for client secret in Key Vault
+    public required Guid SecretId { get; init; } // Identifier for client secret in Key Vault
     public required string BaseUrl { get; init; }  // API base URL
     public Dictionary<string, string> QueryParameters { get; init; } = new(); // Query parameters
     public Dictionary<string, string> Headers { get; init; } = new(); // HTTP headers

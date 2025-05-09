@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SecretManagementService.Models;
 
-public record ExpiringSecret
+public record FetchedSecret
 {
     public required string AppObjectId { get; set; }
     public required string AppId { get; set; }

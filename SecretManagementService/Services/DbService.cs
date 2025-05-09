@@ -5,7 +5,7 @@ using Db.Repositories;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SecretManagementService.Models;
-using SecretManagementService.Models.Dtos;
+using SMSFunctionApp.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -39,10 +39,10 @@ public class DbService : IDbService
         _emailRepository.SetExecutingUser(executingUser);
     }
 
-    public async Task<SecretNotificationInfo?> GetNotificationInfoAsync(string secretId)
+    public async Task<SecretNotificationInfo?> GetNotificationInfoAsync(Guid secretId)
     {
         // Step 1: Fetch the Secret entity with its non-sensitive fields (e.g., Subscriber, Application)
-        var secret = await _secretRepo.ReadItemAsync(Guid.Parse(secretId), false);
+        var secret = await _secretRepo.ReadItemAsync(secretId, false);
 
         if (secret == null)
         {
@@ -57,7 +57,7 @@ public class DbService : IDbService
         var notificationInfo = new SecretNotificationInfo
         {
             SecretId = secretId,
-            AppId = secret.Application?.ApplicationId.ToString() ?? string.Empty,
+            AppId = secret.Application?.ApplicationId ?? Guid.Empty,
             DisplayName = secret.DisplayName,
             EndDateTime = secret.EndDateTime,
             LastTimeNotified = secret.LastTimeNotified,
@@ -83,8 +83,7 @@ public class DbService : IDbService
         return notificationInfo;
     }
 
-
-    public Task<bool> ShouldNotifyAsync(string secretId, out SecretNotificationInfo notificationDto)
+    public Task UpdateLastNotifiedAsync(Guid secretId, DateTime dateTime)
     {
         throw new NotImplementedException();
     }

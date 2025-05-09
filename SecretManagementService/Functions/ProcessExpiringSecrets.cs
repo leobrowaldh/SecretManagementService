@@ -8,7 +8,7 @@ using SecretManagementService.Models;
 using SecretManagementService.Models.Response;
 using SecretManagementService.Services;
 using System.Collections.Generic;
-using SecretManagementService.Models.Dtos;
+using SMSFunctionApp.Models;
 
 namespace SecretManagementService.Functions;
 
@@ -30,7 +30,7 @@ public class ProcessExpiringSecrets
         //another way of creating a logger, using functionContext, which provide function execution context.
         var logger = context.GetLogger("ProcessExpiringSecrets");
 
-        var secret = JsonSerializer.Deserialize<ExpiringSecret>(message);
+        var secret = JsonSerializer.Deserialize<FetchedSecret>(message);
         if (secret == null)
         {
             //logger.LogError("Message was null or empty: {message}", message);
@@ -38,7 +38,14 @@ public class ProcessExpiringSecrets
         }
 
         logger.LogInformation("Calling notification service...");
-        SecretNotificationInfo secretNotificationInfo = await _notificationService.FetchNotificationInfoAsync(secret.KeyId);
+
+        if (!Guid.TryParse(secret.KeyId, out var secretId))
+        {
+            _logger.LogWarning("Invalid GUID: {KeyId}", secret.KeyId);
+            //Maybe forward to dead letter queue, or similar aproach, so it doesnt die silently.
+            return; 
+        }
+        SecretNotificationInfo secretNotificationInfo = await _notificationService.FetchNotificationInfoAsync(secretId);
 
         if (secretNotificationInfo.ShouldNotify)
         {

@@ -51,4 +51,7 @@
     <ProjectReference Include="..\Db\Db.csproj" />
     <ProjectReference Include="..\SharedResources\SharedResources.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Mocks\" />
+  </ItemGroup>
 </Project>
