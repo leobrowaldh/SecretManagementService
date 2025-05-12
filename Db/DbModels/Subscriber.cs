@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Db.DbModels;
 
-[Table("Subscribers", Schema = "suprusr")]
+[Table("Subscribers", Schema = "adm")]
 public class Subscriber
 {
     public Guid SubscriberId { get; set; }

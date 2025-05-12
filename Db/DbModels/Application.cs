@@ -2,7 +2,7 @@
 
 namespace Db.DbModels;
 
-[Table("Applications", Schema = "suprusr")]
+[Table("Applications", Schema = "adm")]
 public class Application
 {
     public Guid ApplicationId { get; set; }

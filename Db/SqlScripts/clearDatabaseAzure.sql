@@ -20,20 +20,18 @@ GO
 
 --drop functions
 DROP FUNCTION IF EXISTS rls.fn_subscriber_filter;
-DROP FUNCTION IF EXISTS rls.fn_api_filter;
-DROP FUNCTION IF EXISTS rls.fn_phone_filter;
-DROP FUNCTION IF EXISTS rls.fn_email_filter;
+DROP FUNCTION IF EXISTS rls.fn_application_filter;
 GO
 
 --drop tables in the right order not to get fk conflicts
 DROP TABLE IF EXISTS suprusr.ApiEndpoints;
-DROP TABLE IF EXISTS suprusr.PhoneSecret;
-DROP TABLE IF EXISTS suprusr.EmailSecret;
+DROP TABLE IF EXISTS suprusr.PhoneApplication;
+DROP TABLE IF EXISTS suprusr.EmailApplication;
 DROP TABLE IF EXISTS suprusr.Phones;
 DROP TABLE IF EXISTS suprusr.Emails;
 DROP TABLE IF EXISTS usr.Secrets;
-DROP TABLE IF EXISTS suprusr.Applications;
-DROP TABLE IF EXISTS suprusr.Subscribers;
+DROP TABLE IF EXISTS adm.Applications;
+DROP TABLE IF EXISTS adm.Subscribers;
 DROP TABLE IF EXISTS dbo.__EFMigrationsHistory;
 GO
 
@@ -42,4 +40,5 @@ GO
 DROP SCHEMA IF EXISTS rls;
 DROP SCHEMA IF EXISTS usr;
 DROP SCHEMA IF EXISTS suprusr;
+DROP SCHEMA IF EXISTS adm;
 GO

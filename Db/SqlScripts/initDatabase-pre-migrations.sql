@@ -8,3 +8,6 @@ GO
 CREATE SCHEMA suprusr;
 GO
 
+CREATE SCHEMA adm;
+GO
+

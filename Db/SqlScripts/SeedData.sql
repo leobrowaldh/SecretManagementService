@@ -12,11 +12,11 @@ DECLARE @EmailId UNIQUEIDENTIFIER = NEWID();
 DECLARE @PhoneId UNIQUEIDENTIFIER = NEWID();
 
 -- Seed Subscriber
-INSERT INTO [suprusr].[Subscribers] (SubscriberId, MicrosoftGraphOwnerId, Seeded)
+INSERT INTO [adm].[Subscribers] (SubscriberId, MicrosoftGraphOwnerId, Seeded)
 VALUES (@SubscriberId, 'fake-owner-id-tenant-1234', 1);
 
 -- Seed Application
-INSERT INTO [suprusr].[Applications] (ApplicationId, MicrosoftGraphApiAppId, Seeded, SubscriberId)
+INSERT INTO [adm].[Applications] (ApplicationId, MicrosoftGraphApiAppId, Seeded, SubscriberId)
 VALUES (@ApplicationId, 'fake-api-app-id-5678', 1, @SubscriberId);
 
 -- Seed Secret
