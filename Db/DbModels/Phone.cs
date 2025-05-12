@@ -15,7 +15,9 @@ public class Phone
     [Required]
     [MaxLength(30)]
     [Phone]
-    public string PhoneNumber { get; set; }
+    public required string PhoneNumber { get; set; }
     public bool Seeded { get; set; }
-    public List<Secret> Secrets { get; set; } = [];
+    public List<Application> Applications { get; set; } = [];
+    public required Subscriber Subscriber { get; set; }
+    public Guid SubscriberId { get; set; }
 }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Db.DbModels;
 
@@ -15,14 +10,8 @@ public class Secret
     public string? DisplayName { get; set; }
     public required DateTime EndDateTime { get; set; }
     public DateTime? LastTimeNotified { get; set; }
-    public bool ContactByEmail { get; set; }
-    public bool ContactBySMS { get; set; }
-    public bool ContactByApiEndpoint { get; set; }
     public bool Seeded { get; set; }
+    public required Application Application { get; set; }
+    public Guid ApplicationId { get; set; }
 
-    public Application? Application { get; set; }
-    public Subscriber Subscriber { get; set; }
-    public List<Phone> Phones { get; set; } = [];
-    public List<Email> Emails { get; set; } = [];
-    public List<ApiEndpoint> ApiEndpoints { get; set; } = [];
 }

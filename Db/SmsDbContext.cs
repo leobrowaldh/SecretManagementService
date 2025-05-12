@@ -27,15 +27,26 @@ public class SmsDbContext: DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Secret>()
-            .HasMany(s => s.Emails)
-            .WithMany(e => e.Secrets)
-            .UsingEntity(j => j.ToTable("EmailSecret", "suprusr"));
+        modelBuilder.Entity<Email>()
+            .HasOne(e => e.Subscriber)
+            .WithMany(s => s.Emails)
+            .HasForeignKey(e => e.SubscriberId);
 
-        modelBuilder.Entity<Secret>()
-            .HasMany(s => s.Phones)
-            .WithMany(e => e.Secrets)
-            .UsingEntity(j => j.ToTable("PhoneSecret", "suprusr"));
+        modelBuilder.Entity<Email>()
+            .HasMany(e => e.Applications)
+            .WithMany(a => a.Emails)
+            .UsingEntity(j => j.ToTable("EmailApplication", "suprusr"));
+
+        modelBuilder.Entity<Phone>()
+            .HasOne(p => p.Subscriber)
+            .WithMany(s => s.Phones)
+            .HasForeignKey(p => p.SubscriberId);
+
+        modelBuilder.Entity<Phone>()
+            .HasMany(p => p.Applications)
+            .WithMany(a => a.Phones)
+            .UsingEntity(j => j.ToTable("PhoneApplication", "suprusr"));
+
     }
 
 }

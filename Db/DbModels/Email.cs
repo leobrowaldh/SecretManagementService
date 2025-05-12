@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Db.DbModels;
 
@@ -15,7 +10,9 @@ public class Email
     [Required]
     [MaxLength(320)]
     [EmailAddress]
-    public string EmailAddress { get; set; }
+    public required string EmailAddress { get; set; }
     public bool Seeded { get; set; }
-    public List<Secret> Secrets { get; set; } = [];
+    public List<Application> Applications { get; set; } = [];
+    public required Subscriber Subscriber { get; set; }
+    public Guid SubscriberId { get; set; }
 }
