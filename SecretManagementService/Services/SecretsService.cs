@@ -15,10 +15,11 @@ public class SecretsService : ISecretsService
         _logger = logger;
     }
 
+    //***work in progress***
     public async Task SyncDatabaseSecretsWithSource()
     {
         var appData = await _graphApiService.GetAppDataAsync();
-        var dbSecrets = _dbService.GetAllSecretsAsync();
+        //var dbSecrets = _dbService.GetAllSecretsAsync();
 
         List<FetchedSecret>? expiringSecrets = appData?.value
             .SelectMany(app => app.passwordCredentials
@@ -42,7 +43,7 @@ public class SecretsService : ISecretsService
             _logger.LogInformation("Successfully fetched {Count} expiring secrets.", expiringSecrets.Count);
         }
 
-        return expiringSecrets;
+        return;
     }
 
     public async Task<List<FetchedSecret>?> GetExpiringSecretsAsync(int _daysUntilSecretsExpire)
