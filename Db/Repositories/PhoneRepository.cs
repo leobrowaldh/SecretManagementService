@@ -39,22 +39,18 @@ namespace Db.Repositories
                     int totalCount = 0;
                     filter = filter ?? "";
 
-                    await connection.OpenAsync();
-                    await SqlQueryInjector.ApplySessionContextAsync(connection, _sessionContext);
-                    await SqlQueryInjector.ExecuteAsUserAsync(connection, _executingUser);
-
                     using (var countCmd = connection.CreateCommand())
                     {
                         countCmd.CommandText = @"
                             SELECT COUNT(*) FROM suprusr.Phones
                             WHERE PhoneNumber LIKE @Filter";
                         countCmd.Parameters.AddWithValue("@Filter", $"%{filter}%");
-                        totalCount = (int)(await countCmd.ExecuteScalarAsync());
+                        totalCount = (int?)await countCmd.ExecuteScalarAsync() ?? 0;
                     }
 
                     using var cmd = connection.CreateCommand();
                     cmd.CommandText = @"
-                        SELECT PhoneId, PhoneNumber
+                        SELECT PhoneId, PhoneNumber, SubscriberId
                         FROM suprusr.Phones
                         WHERE PhoneNumber LIKE @Filter
                         ORDER BY PhoneId
@@ -70,7 +66,8 @@ namespace Db.Repositories
                         result.Add(new Phone
                         {
                             PhoneId = reader.GetGuid(reader.GetOrdinal("PhoneId")),
-                            PhoneNumber = reader.GetString(reader.GetOrdinal("PhoneNumber"))
+                            PhoneNumber = reader.GetString(reader.GetOrdinal("PhoneNumber")),
+                            SubscriberId = reader.GetGuid(reader.GetOrdinal("SubscriberId"))
                         });
                     }
 
@@ -92,7 +89,7 @@ namespace Db.Repositories
                 return await SqlQueryInjector.RunWithUserAsync(connection, _sessionContext, _executingUser, async () =>
                 {
                     using var cmd = connection.CreateCommand();
-                    cmd.CommandText = "SELECT PhoneId, PhoneNumber FROM suprusr.Phones WHERE PhoneId = @Id";
+                    cmd.CommandText = "SELECT PhoneId, PhoneNumber, SubscriberId FROM suprusr.Phones WHERE PhoneId = @Id";
                     cmd.Parameters.AddWithValue("@Id", itemId);
 
                     using var reader = await cmd.ExecuteReaderAsync();
@@ -101,7 +98,8 @@ namespace Db.Repositories
                         return new Phone
                         {
                             PhoneId = reader.GetGuid(reader.GetOrdinal("PhoneId")),
-                            PhoneNumber = reader.GetString(reader.GetOrdinal("PhoneNumber"))
+                            PhoneNumber = reader.GetString(reader.GetOrdinal("PhoneNumber")),
+                            SubscriberId = reader.GetGuid(reader.GetOrdinal("SubscriberId"))
                         };
                     }
 
@@ -118,11 +116,12 @@ namespace Db.Repositories
                 {
                     using var cmd = connection.CreateCommand();
                     cmd.CommandText = @"
-                    INSERT INTO suprusr.Phones (PhoneId, PhoneNumber)
-                    VALUES (@PhoneId, @PhoneNumber)";
+                    INSERT INTO suprusr.Phones (PhoneId, PhoneNumber, SubscriberId)
+                    VALUES (@PhoneId, @PhoneNumber, @SubscriberId)";
 
                     cmd.Parameters.AddWithValue("@PhoneId", phone.PhoneId);
                     cmd.Parameters.AddWithValue("@PhoneNumber", phone.PhoneNumber);
+                    cmd.Parameters.AddWithValue("@SubscriberId", phone.SubscriberId);
 
                     await cmd.ExecuteNonQueryAsync();
                     return phone;
@@ -139,11 +138,12 @@ namespace Db.Repositories
                     using var cmd = connection.CreateCommand();
                     cmd.CommandText = @"
                     UPDATE suprusr.Phones
-                    SET PhoneNumber = @PhoneNumber
+                    SET PhoneNumber = @PhoneNumber, SubscriberId = @SubscriberId
                     WHERE PhoneId = @PhoneId";
 
                     cmd.Parameters.AddWithValue("@PhoneId", phone.PhoneId);
                     cmd.Parameters.AddWithValue("@PhoneNumber", phone.PhoneNumber);
+                    cmd.Parameters.AddWithValue("@SubscriberId", phone.SubscriberId);
 
                     await cmd.ExecuteNonQueryAsync();
                     return phone;
@@ -171,7 +171,7 @@ namespace Db.Repositories
             }
         }
 
-        public async Task<List<Phone>> GetPhonesBySecretIdAsync(Guid secretId)
+        public async Task<List<Phone>> GetPhonesByApplicationIdAsync(Guid applicationId)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
@@ -181,12 +181,12 @@ namespace Db.Repositories
 
                     using var cmd = connection.CreateCommand();
                     cmd.CommandText = @"
-                    SELECT p.PhoneId, p.PhoneNumber
+                    SELECT p.PhoneId, p.PhoneNumber, p.SubscriberId
                     FROM suprusr.Phones p
-                    INNER JOIN suprusr.PhoneSecret ps ON p.PhoneId = ps.PhonesPhoneId
-                    WHERE ps.SecretsSecretId = @SecretId";
+                    INNER JOIN suprusr.PhoneApplication pa ON p.PhoneId = pa.PhonesPhoneId
+                    WHERE pa.ApplicationsApplicationId = @applicationId";
 
-                    cmd.Parameters.AddWithValue("@SecretId", secretId);
+                    cmd.Parameters.AddWithValue("@applicationId", applicationId);
 
                     using var reader = await cmd.ExecuteReaderAsync();
                     while (await reader.ReadAsync())
@@ -194,7 +194,8 @@ namespace Db.Repositories
                         phones.Add(new Phone
                         {
                             PhoneId = reader.GetGuid(reader.GetOrdinal("PhoneId")),
-                            PhoneNumber = reader.GetString(reader.GetOrdinal("PhoneNumber"))
+                            PhoneNumber = reader.GetString(reader.GetOrdinal("PhoneNumber")),
+                            SubscriberId = reader.GetGuid(reader.GetOrdinal("SubscriberId"))
                         });
                     }
 

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Db.Helpers;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
+using System;
 
 namespace Db.Repositories;
 
@@ -41,10 +42,6 @@ public class EmailRepository : IEmailRepository
                 int totalCount = 0;
                 filter = filter ?? "";
 
-                await connection.OpenAsync();
-                await SqlQueryInjector.ApplySessionContextAsync(connection, _sessionContext);
-                await SqlQueryInjector.ExecuteAsUserAsync(connection, _executingUser);
-
                 using (var countCmd = connection.CreateCommand())
                 {
                     countCmd.CommandText = @"
@@ -56,7 +53,7 @@ public class EmailRepository : IEmailRepository
 
                 using var cmd = connection.CreateCommand();
                 cmd.CommandText = @"
-                    SELECT EmailId, EmailAddress
+                    SELECT EmailId, EmailAddress, SubscriberId
                     FROM suprusr.Emails
                     WHERE EmailAddress LIKE @Filter
                     ORDER BY EmailId
@@ -72,7 +69,8 @@ public class EmailRepository : IEmailRepository
                     result.Add(new Email
                     {
                         EmailId = reader.GetGuid(reader.GetOrdinal("EmailId")),
-                        EmailAddress = reader.GetString(reader.GetOrdinal("EmailAddress"))
+                        EmailAddress = reader.GetString(reader.GetOrdinal("EmailAddress")),
+                        SubscriberId = reader.GetGuid(reader.GetOrdinal("SubscriberId"))
                     });
                 }
 
@@ -94,7 +92,7 @@ public class EmailRepository : IEmailRepository
             return await SqlQueryInjector.RunWithUserAsync(connection, _sessionContext, _executingUser, async () =>
             {
                 using var cmd = connection.CreateCommand();
-                cmd.CommandText = "SELECT EmailId, EmailAddress FROM suprusr.Emails WHERE EmailId = @Id";
+                cmd.CommandText = "SELECT EmailId, EmailAddress, SubscriberId FROM suprusr.Emails WHERE EmailId = @Id";
                 cmd.Parameters.AddWithValue("@Id", itemId);
 
                 using var reader = await cmd.ExecuteReaderAsync();
@@ -103,7 +101,8 @@ public class EmailRepository : IEmailRepository
                     return new Email
                     {
                         EmailId = reader.GetGuid(reader.GetOrdinal("EmailId")),
-                        EmailAddress = reader.GetString(reader.GetOrdinal("EmailAddress"))
+                        EmailAddress = reader.GetString(reader.GetOrdinal("EmailAddress")),
+                        SubscriberId = reader.GetGuid(reader.GetOrdinal("SubscriberId"))
                     };
                 }
 
@@ -120,11 +119,12 @@ public class EmailRepository : IEmailRepository
             {
                 using var cmd = connection.CreateCommand();
                 cmd.CommandText = @"
-                INSERT INTO suprusr.Emails (EmailId, EmailAddress)
-                VALUES (@EmailId, @EmailAddress)";
+                INSERT INTO suprusr.Emails (EmailId, EmailAddress, SubscriberId)
+                VALUES (@EmailId, @EmailAddress, @SubscriberId)";
 
                 cmd.Parameters.AddWithValue("@EmailId", email.EmailId);
                 cmd.Parameters.AddWithValue("@EmailAddress", email.EmailAddress);
+                cmd.Parameters.AddWithValue("@SubscriberId", email.SubscriberId);
 
                 await cmd.ExecuteNonQueryAsync();
                 return email;
@@ -141,11 +141,12 @@ public class EmailRepository : IEmailRepository
                 using var cmd = connection.CreateCommand();
                 cmd.CommandText = @"
                 UPDATE suprusr.Emails
-                SET EmailAddress = @EmailAddress
+                SET EmailAddress = @EmailAddress, SubscriberId = @SubscriberId
                 WHERE EmailId = @EmailId";
 
                 cmd.Parameters.AddWithValue("@EmailId", email.EmailId);
                 cmd.Parameters.AddWithValue("@EmailAddress", email.EmailAddress);
+                cmd.Parameters.AddWithValue("@SubscriberId", email.SubscriberId);
 
                 await cmd.ExecuteNonQueryAsync();
                 return email;
@@ -159,10 +160,7 @@ public class EmailRepository : IEmailRepository
         {
             return await SqlQueryInjector.RunWithUserAsync(connection, _sessionContext, _executingUser, async () =>
             {
-                var email = await ReadItemAsync(emailId, flat: true);
-                if (email == null)
-                    throw new ArgumentException($"Email {emailId} not found");
-
+                var email = await ReadItemAsync(emailId, flat: true) ?? throw new ArgumentException($"Email {emailId} not found");
                 using var cmd = connection.CreateCommand();
                 cmd.CommandText = "DELETE FROM suprusr.Emails WHERE EmailId = @EmailId";
                 cmd.Parameters.AddWithValue("@EmailId", emailId);
@@ -173,7 +171,7 @@ public class EmailRepository : IEmailRepository
         }
     }
 
-    public async Task<List<Email>> GetEmailsBySecretIdAsync(Guid secretId)
+    public async Task<List<Email>> GetEmailsByApplicationIdAsync(Guid applicationId)
     {
         using (var connection = new SqlConnection(_connectionString))
         {
@@ -183,12 +181,13 @@ public class EmailRepository : IEmailRepository
 
                 using var cmd = connection.CreateCommand();
                 cmd.CommandText = @"
-                SELECT e.EmailId, e.EmailAddress
+                SELECT e.EmailId, e.EmailAddress, e.SubscriberId
                 FROM suprusr.Emails e
-                INNER JOIN suprusr.EmailSecret es ON e.EmailId = es.EmailsEmailId
-                WHERE es.SecretsSecretId = @SecretId";
+                INNER JOIN suprusr.EmailApplication ea ON e.EmailId = ea.EmailsEmailId
+                WHERE ea.ApplicationsApplicationId = @ApplicationId"
+                ;
 
-                cmd.Parameters.AddWithValue("@SecretId", secretId);
+                cmd.Parameters.AddWithValue("@ApplicationId", applicationId);
 
                 using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
@@ -196,7 +195,8 @@ public class EmailRepository : IEmailRepository
                     emails.Add(new Email
                     {
                         EmailId = reader.GetGuid(reader.GetOrdinal("EmailId")),
-                        EmailAddress = reader.GetString(reader.GetOrdinal("EmailAddress"))
+                        EmailAddress = reader.GetString(reader.GetOrdinal("EmailAddress")),
+                        SubscriberId = reader.GetGuid(reader.GetOrdinal("SubscriberId"))
                     });
                 }
 

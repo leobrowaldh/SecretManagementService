@@ -8,6 +8,6 @@ using System.Threading.Tasks;
 namespace Db.Repositories;
 public interface IEmailRepository : IGenericRepository<Email>
 {
-    Task<List<Email>> GetEmailsBySecretIdAsync(Guid secretId);
+    Task<List<Email>> GetEmailsByApplicationIdAsync(Guid applicationId);
 }
 

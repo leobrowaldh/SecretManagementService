@@ -45,7 +45,13 @@ public class ProcessExpiringSecrets
             //Maybe forward to dead letter queue, or similar aproach, so it doesnt die silently.
             return; 
         }
-        SecretNotificationInfo secretNotificationInfo = await _notificationService.FetchNotificationInfoAsync(secretId);
+        if (!Guid.TryParse(secret.AppId, out var applicationId))
+        {
+            _logger.LogWarning("Invalid GUID: {AppId}", secret.AppId);
+            //Maybe forward to dead letter queue, or similar aproach, so it doesnt die silently.
+            return;
+        }
+        SecretNotificationInfo secretNotificationInfo = await _notificationService.FetchNotificationInfoAsync(secretId, applicationId);
 
         if (secretNotificationInfo.ShouldNotify)
         {

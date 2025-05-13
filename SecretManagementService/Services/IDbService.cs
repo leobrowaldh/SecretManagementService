@@ -15,7 +15,7 @@ public interface IDbService
     /// <returns></returns>
     void SetContext(Dictionary<string, object?> contextVariables);
     void SetExecutingUser(string executingUser);
-    Task<SecretNotificationInfo?> GetNotificationInfoAsync(Guid secretId);
+    Task<SecretNotificationInfo?> GetNotificationInfoAsync(Guid secretId, Guid appId);
 
     Task UpdateLastNotifiedAsync(Guid secretId, DateTime dateTime);
 }

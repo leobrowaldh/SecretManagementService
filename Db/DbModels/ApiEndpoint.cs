@@ -30,5 +30,5 @@ public class ApiEndpoint
     public bool Seeded { get; set; }
 
     public Guid SubscriberId { get; set; }
-    public required Subscriber Subscriber { get; set; }
+    public Subscriber Subscriber { get; set; }
 }

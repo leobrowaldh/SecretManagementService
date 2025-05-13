@@ -1,78 +1,60 @@
-﻿using Db;
-using Db.DbModels;
-using Db.Factories;
+﻿using Db.DbModels;
 using Db.Repositories;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 using SecretManagementService.Models;
 using SMSFunctionApp.Models;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SecretManagementService.Services;
 public class DbService : IDbService
 {
-    private readonly IGenericRepository<Secret> _secretRepo;
-    private readonly IPhoneRepository _phoneRepository;
-    private readonly IEmailRepository _emailRepository;
-    public DbService(IGenericRepository<Secret> secretRepo, IPhoneRepository phoneRepository, IEmailRepository emailRepository)
+    private readonly IGenericRepository<Application> _applicationRepo;
+    public DbService(IGenericRepository<Application> applicationRepo)
     {
-        _secretRepo = secretRepo;
-        _phoneRepository = phoneRepository;
-        _emailRepository = emailRepository;
+        _applicationRepo = applicationRepo;
     }
 
     public void SetContext(Dictionary<string, object?> contextVariables)
     {
-        _secretRepo.SetContext(contextVariables);
-        _phoneRepository.SetContext(contextVariables);
-        _emailRepository.SetContext(contextVariables);
+        _applicationRepo.SetContext(contextVariables);
     }
     public void SetExecutingUser(string executingUser)
     {
-        _secretRepo.SetExecutingUser(executingUser);
-        _phoneRepository.SetExecutingUser(executingUser);
-        _emailRepository.SetExecutingUser(executingUser);
+        _applicationRepo.SetExecutingUser(executingUser);
     }
 
-    public async Task<SecretNotificationInfo?> GetNotificationInfoAsync(Guid secretId)
+    public async Task<SecretNotificationInfo?> GetNotificationInfoAsync(Guid secretId, Guid appId)
     {
-        // Step 1: Fetch the Secret entity with its non-sensitive fields (e.g., Subscriber, Application)
-        var secret = await _secretRepo.ReadItemAsync(secretId, false);
+        var application = await _applicationRepo.ReadItemAsync(appId, false);
 
+        if (application == null)
+        {
+            return null;
+        }
+        var secret = application.Secrets.FirstOrDefault(s => s.SecretId == secretId);
         if (secret == null)
         {
             return null;
         }
 
-        // Step 2: Fetch the encrypted Phones, Emails separately using your ADO.NET repositories
-        var phones = await _phoneRepository.GetPhonesBySecretIdAsync(secret.SecretId); // ADO.NET call for Phones (decrypting)
-        var emails = await _emailRepository.GetEmailsBySecretIdAsync(secret.SecretId); // ADO.NET call for Emails (decrypting)
-
-        // Step 3: Map everything into the SecretNotificationInfo object
         var notificationInfo = new SecretNotificationInfo
         {
             SecretId = secretId,
-            AppId = secret.Application?.ApplicationId ?? Guid.Empty,
+            AppId = appId,
             DisplayName = secret.DisplayName,
             EndDateTime = secret.EndDateTime,
             LastTimeNotified = secret.LastTimeNotified,
             ContactMethod = new ContactMethod
             {
-                IsEmail = secret.ContactByEmail,
-                IsSMS = secret.ContactBySMS,
-                IsApiEndpoint = secret.ContactByApiEndpoint,
-                Emails = emails.Select(e => e.EmailAddress).ToList(),
-                PhoneNumbers = phones.Select(p => p.PhoneNumber).ToList(),
+                IsEmail = application.ContactByEmail,
+                IsSMS = application.ContactBySMS,
+                IsApiEndpoint = application.ContactByApiEndpoint,
+                Emails = application.Emails.Select(e => e.EmailAddress).ToList(),
+                PhoneNumbers = application.Phones.Select(p => p.PhoneNumber).ToList(),
                 ApiInfo = new ApiInfo
                 {
                     //Not yet implemented, add logic here when models are fully defined.
                     SecretId = secretId,
-                    BaseUrl = secret.ApiEndpoints.FirstOrDefault()?.BaseUrl ?? string.Empty
+                    BaseUrl = application.Subscriber.ApiEndpoint?.BaseUrl ?? "no url found",
                 }
             }
         };

@@ -8,5 +8,5 @@ using System.Threading.Tasks;
 namespace Db.Repositories;
 public interface IPhoneRepository : IGenericRepository<Phone>
 {
-    Task<List<Phone>> GetPhonesBySecretIdAsync(Guid secretId);
+    Task<List<Phone>> GetPhonesByApplicationIdAsync(Guid applicationId);
 }

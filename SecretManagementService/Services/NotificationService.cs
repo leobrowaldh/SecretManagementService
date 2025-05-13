@@ -27,9 +27,9 @@ public class NotificationService : INotificationService
         _dbService.SetExecutingUser("AppScopedUser_BackgroundTasks");
     }
 
-    public async Task<SecretNotificationInfo> FetchNotificationInfoAsync(Guid secretId)
+    public async Task<SecretNotificationInfo> FetchNotificationInfoAsync(Guid secretId, Guid appId)
     {
-        var secretNotificationInfo = await _dbService.GetNotificationInfoAsync(secretId);
+        var secretNotificationInfo = await _dbService.GetNotificationInfoAsync(secretId, appId);
         if (secretNotificationInfo == null)
         {
             //if the secret is registered in our app, we need to have the stored notification info.
