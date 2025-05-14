@@ -15,4 +15,5 @@ public class Email
     public List<Application> Applications { get; set; } = [];
     public Subscriber Subscriber { get; set; }
     public Guid SubscriberId { get; set; }
+    public bool IsDeleted { get; set; }
 }

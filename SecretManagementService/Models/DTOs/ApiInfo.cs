@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SecretManagementService.Models;
+namespace SMSFunctionApp.Models.DTOs;
 public class ApiInfo
 {
     public required Guid SecretId { get; init; } // Identifier for client secret in Key Vault

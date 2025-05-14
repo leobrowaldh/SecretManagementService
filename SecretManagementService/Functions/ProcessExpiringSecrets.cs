@@ -4,11 +4,11 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using SecretManagementService.Models;
 using SecretManagementService.Models.Response;
 using SecretManagementService.Services;
 using System.Collections.Generic;
 using SMSFunctionApp.Models;
+using SMSFunctionApp.Models.DTOs;
 
 namespace SecretManagementService.Functions;
 
@@ -30,28 +30,22 @@ public class ProcessExpiringSecrets
         //another way of creating a logger, using functionContext, which provide function execution context.
         var logger = context.GetLogger("ProcessExpiringSecrets");
 
-        var secret = JsonSerializer.Deserialize<FetchedSecret>(message);
-        if (secret == null)
-        {
-            //logger.LogError("Message was null or empty: {message}", message);
-            throw new InvalidOperationException($"Failed to deserialize message, message is null or empty: {message}");
-        }
+        var secret = JsonSerializer.Deserialize<SecretDto>(message) 
+            ?? throw new InvalidOperationException($"Failed to deserialize message, message is null or empty: {message}");
 
         logger.LogInformation("Calling notification service...");
 
-        if (!Guid.TryParse(secret.KeyId, out var secretId))
+        if (secret is null || secret.SecretId == null)
         {
-            _logger.LogWarning("Invalid GUID: {KeyId}", secret.KeyId);
-            //Maybe forward to dead letter queue, or similar aproach, so it doesnt die silently.
-            return; 
-        }
-        if (!Guid.TryParse(secret.AppId, out var applicationId))
-        {
-            _logger.LogWarning("Invalid GUID: {AppId}", secret.AppId);
-            //Maybe forward to dead letter queue, or similar aproach, so it doesnt die silently.
+            logger.LogError("Secret is null, skipping notification.");
             return;
         }
-        SecretNotificationInfo secretNotificationInfo = await _notificationService.FetchNotificationInfoAsync(secretId, applicationId);
+        if (secret.ApplicationId is null)
+        {
+            logger.LogError("Secret {secretId} is not associated to any Application, skipping notification.", secret.SecretId);
+            return;
+        }
+        SecretNotificationInfo secretNotificationInfo = await _notificationService.FetchNotificationInfoAsync((Guid)secret.SecretId, (Guid)secret.ApplicationId);
 
         if (secretNotificationInfo.ShouldNotify)
         {

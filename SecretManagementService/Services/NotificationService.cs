@@ -45,12 +45,15 @@ public class NotificationService : INotificationService
         {
             foreach (var email in secretNotificationInfo.ContactMethod.Emails)
             {
-                _logger.LogInformation("Sending email notification for secret {SecretId}", secretNotificationInfo.SecretId);
+                _logger.LogInformation("Sending email notification for secret {SecretId}", secretNotificationInfo.Secret.SecretId);
                 await _emailService.SendEmailAsync(email, "Secret Expiration Notification",
-                    $"<p>Your secret <strong>{secretNotificationInfo.DisplayName}</strong> is expiring on {secretNotificationInfo.EndDateTime}.</p>" +
+                    $"<p>Your secret <strong>{secretNotificationInfo.Secret.DisplayName}</strong> is expiring on {secretNotificationInfo.Secret.EndDateTime}.</p>" +
                     $"<p>Access your account: <a href='{_configuration["SMS_URL"]}'>{_configuration["SMS_URL"]}</a></p>");
             }
-            await _dbService.UpdateLastNotifiedAsync(secretNotificationInfo.SecretId, DateTime.UtcNow);
+            if (secretNotificationInfo.Secret.SecretId is not null)
+            {
+                await _dbService.UpdateLastNotifiedAsync((Guid)secretNotificationInfo.Secret.SecretId, DateTime.UtcNow);
+            }
         }
         if (secretNotificationInfo.ContactMethod.IsSMS)
         {
@@ -64,6 +67,7 @@ public class NotificationService : INotificationService
             //    await _smsService.SendSmsAsync(phoneNumber, $"Your secret {secretNotificationInfo.DisplayName} is expiring on {secretNotificationInfo.EndDateTime}." +
             //        $"<p>Access your account: <a href='{_configuration["SMS_URL"]}'>{_configuration["SMS_URL"]}</a></p>");
             //}
+            //await _dbService.UpdateLastNotifiedAsync(secretNotificationInfo.SecretId, DateTime.UtcNow);
         }
         if (secretNotificationInfo.ContactMethod.IsApiEndpoint)
         {

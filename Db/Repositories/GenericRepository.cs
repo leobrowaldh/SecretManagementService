@@ -1,6 +1,6 @@
-﻿using Db.Dtos;
-using Db.Helpers;
+﻿using Db.Helpers;
 using Db.Repositories;
+using Db.ResponseModels;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
@@ -33,21 +33,30 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         _executingUser = executingUser;
     }
 
-    public virtual async Task<ResponsePageDto<T>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false)
+    public virtual async Task<ResponsePage<T>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false, bool track = false)
     {
         return await SqlQueryInjector.RunWithUserAsync(_connection, _sessionContext, _executingUser, async () =>
         {
             filter ??= "";
             filter = filter.ToLower();
+            IQueryable<T> query;
 
-            IQueryable<T> query = _dbSet.AsNoTracking();
+            if (track)
+            {
+                query = _dbSet;
+            }
+            else 
+            { 
+                query = _dbSet.AsNoTracking();
+            }
+
             query = ApplyIncludes(query, flat);
             query = ApplyCustomFilter(query, seeded, filter);
 
             var totalCount = await query.CountAsync();
             var pageItems = await query.Skip(pageNumber * pageSize).Take(pageSize).ToListAsync();
 
-            return new ResponsePageDto<T>
+            return new ResponsePage<T>
             {
                 DbItemsCount = totalCount,
                 PageItems = pageItems,
@@ -57,12 +66,37 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         });
     }
 
+    public virtual async Task<List<T>> ReadItemsAsync(bool flat, string filter, bool seeded = false, bool track = false)
+    {
+        return await SqlQueryInjector.RunWithUserAsync(_connection, _sessionContext, _executingUser, async () =>
+        {
+            filter ??= "";
+            filter = filter.ToLower();
+            IQueryable<T> query;
+
+            if (track)
+            {
+                query = _dbSet;
+            }
+            else
+            {
+                query = _dbSet.AsNoTracking();
+            }
+
+            query = ApplyIncludes(query, flat);
+            query = ApplyCustomFilter(query, seeded, filter);
+
+            return await query.ToListAsync();
+        });
+    }
+
     public virtual async Task<T?> ReadItemAsync(Guid itemId, bool flat)
     {
         return await SqlQueryInjector.RunWithUserAsync(_connection, _sessionContext, _executingUser, async () =>
         {
-            IQueryable<T> query = _dbSet.AsNoTracking();
+            IQueryable<T> query = _dbSet;
             query = ApplyIncludes(query, flat);
+            //to fetch the primary key. Needed since we dont know its name in this generic repo.
             var predicate = EFPrimaryKeyHelper.ByPrimaryKey<T>(_dbContext, itemId);
             return await query.FirstOrDefaultAsync(predicate);
         });

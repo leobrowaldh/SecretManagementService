@@ -7,11 +7,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Models\Dtos\**" />
-    <EmbeddedResource Remove="Models\Dtos\**" />
-    <None Remove="Models\Dtos\**" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="local.settings.json" />
   </ItemGroup>
   <ItemGroup>

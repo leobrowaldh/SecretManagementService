@@ -31,4 +31,5 @@ public class ApiEndpoint
 
     public Guid SubscriberId { get; set; }
     public Subscriber Subscriber { get; set; }
+    public bool IsDeleted { get; set; }
 }

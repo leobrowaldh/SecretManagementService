@@ -19,4 +19,5 @@ public class Subscriber
     public List<Phone> Phones { get; set; } = [];
     public List<Email> Emails { get; set; } = [];
     public ApiEndpoint? ApiEndpoint { get; set; }
+    public bool IsDeleted { get; set; }
 }

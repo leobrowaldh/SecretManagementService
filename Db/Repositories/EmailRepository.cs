@@ -1,11 +1,11 @@
 ﻿using Microsoft.Data.SqlClient;
 using Db.DbModels;
-using Db.Dtos;
 using Microsoft.Extensions.Configuration;
 using Db.Helpers;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
 using System;
+using Db.ResponseModels;
 
 namespace Db.Repositories;
 
@@ -31,7 +31,7 @@ public class EmailRepository : IEmailRepository
         _executingUser = executingUser;
     }
 
-    public async Task<ResponsePageDto<Email>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false)
+    public async Task<ResponsePage<Email>> ReadItemsAsync(bool flat, string filter, int pageNumber, int pageSize, bool seeded = false, bool track = false)
     {
         using (var connection = new SqlConnection(_connectionString))
         {
@@ -74,7 +74,7 @@ public class EmailRepository : IEmailRepository
                     });
                 }
 
-                return new ResponsePageDto<Email>
+                return new ResponsePage<Email>
                 {
                     DbItemsCount = totalCount,
                     PageItems = result,
@@ -84,6 +84,40 @@ public class EmailRepository : IEmailRepository
             });
         };
     }
+
+    public async Task<List<Email>> ReadItemsAsync(bool flat, string filter, bool seeded = false, bool track = false)
+    {
+        using var connection = new SqlConnection(_connectionString);
+
+        return await SqlQueryInjector.RunWithUserAsync(connection, _sessionContext, _executingUser, async () =>
+        {
+            var result = new List<Email>();
+            filter ??= "";
+
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+            SELECT EmailId, EmailAddress, SubscriberId
+            FROM suprusr.Emails
+            WHERE EmailAddress LIKE @Filter
+            ORDER BY EmailId";
+
+            cmd.Parameters.AddWithValue("@Filter", $"%{filter}%");
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                result.Add(new Email
+                {
+                    EmailId = reader.GetGuid(reader.GetOrdinal("EmailId")),
+                    EmailAddress = reader.GetString(reader.GetOrdinal("EmailAddress")),
+                    SubscriberId = reader.GetGuid(reader.GetOrdinal("SubscriberId"))
+                });
+            }
+
+            return result;
+        });
+    }
+
 
     public async Task<Email?> ReadItemAsync(Guid itemId, bool flat)
     {
@@ -171,37 +205,4 @@ public class EmailRepository : IEmailRepository
         }
     }
 
-    public async Task<List<Email>> GetEmailsByApplicationIdAsync(Guid applicationId)
-    {
-        using (var connection = new SqlConnection(_connectionString))
-        {
-            return await SqlQueryInjector.RunWithUserAsync(connection, _sessionContext, _executingUser, async () =>
-            {
-                var emails = new List<Email>();
-
-                using var cmd = connection.CreateCommand();
-                cmd.CommandText = @"
-                SELECT e.EmailId, e.EmailAddress, e.SubscriberId
-                FROM suprusr.Emails e
-                INNER JOIN suprusr.EmailApplication ea ON e.EmailId = ea.EmailsEmailId
-                WHERE ea.ApplicationsApplicationId = @ApplicationId"
-                ;
-
-                cmd.Parameters.AddWithValue("@ApplicationId", applicationId);
-
-                using var reader = await cmd.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
-                {
-                    emails.Add(new Email
-                    {
-                        EmailId = reader.GetGuid(reader.GetOrdinal("EmailId")),
-                        EmailAddress = reader.GetString(reader.GetOrdinal("EmailAddress")),
-                        SubscriberId = reader.GetGuid(reader.GetOrdinal("SubscriberId"))
-                    });
-                }
-
-                return emails;
-            });
-        }
-    }
 }

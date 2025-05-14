@@ -1,16 +1,20 @@
 ﻿using Db.DbModels;
 using Db.Repositories;
 using SecretManagementService.Models;
+using SMSFunctionApp.ExtensionMethods;
 using SMSFunctionApp.Models;
+using SMSFunctionApp.Models.DTOs;
 using System.Data;
 
 namespace SecretManagementService.Services;
 public class DbService : IDbService
 {
     private readonly IGenericRepository<Application> _applicationRepo;
-    public DbService(IGenericRepository<Application> applicationRepo)
+    private readonly IGenericRepository<Secret> _secretRepo;
+    public DbService(IGenericRepository<Application> applicationRepo, IGenericRepository<Secret> secretRepo)
     {
         _applicationRepo = applicationRepo;
+        _secretRepo = secretRepo;
     }
 
     public void SetContext(Dictionary<string, object?> contextVariables)
@@ -38,11 +42,7 @@ public class DbService : IDbService
 
         var notificationInfo = new SecretNotificationInfo
         {
-            SecretId = secretId,
-            AppId = appId,
-            DisplayName = secret.DisplayName,
-            EndDateTime = secret.EndDateTime,
-            LastTimeNotified = secret.LastTimeNotified,
+            Secret = secret.ToSecretDto(),
             ContactMethod = new ContactMethod
             {
                 IsEmail = application.ContactByEmail,
@@ -54,18 +54,48 @@ public class DbService : IDbService
                 {
                     //Not yet implemented, add logic here when models are fully defined.
                     SecretId = secretId,
-                    BaseUrl = application.Subscriber.ApiEndpoint?.BaseUrl ?? "no url found",
+                    BaseUrl = application.Subscriber?.ApiEndpoint?.BaseUrl ?? "no subscriber or no url found",
                 }
             }
         };
 
-        // Step 4: Calculate days until expiration
         notificationInfo.DaysUntilSecretExpires = (secret.EndDateTime - DateTime.UtcNow).Days;
 
         return notificationInfo;
     }
 
-    public Task UpdateLastNotifiedAsync(Guid secretId, DateTime dateTime)
+    public async Task UpdateLastNotifiedAsync(Guid secretId, DateTime dateTime)
+    {
+        var secret = await _secretRepo.ReadItemAsync(secretId, true);
+        if (secret != null)
+        {
+            secret.LastTimeNotified = dateTime;
+            await _secretRepo.UpdateItemAsync(secret);
+        }
+        else
+        {
+            throw new InvalidOperationException($"Secret with id {secretId} not found.");
+        }
+    }
+
+    public async Task<List<SecretDto>> GetAllSecretsAsync()
+    {
+        var secrets = await _secretRepo.ReadItemsAsync(true, "") 
+            ?? throw new InvalidOperationException("No secrets found.");
+        var dbSecrets = new List<SecretDto>();
+        foreach (var secret in secrets)
+        {
+            dbSecrets.Add(secret.ToSecretDto());
+        }
+        return dbSecrets;
+    }
+
+    public Task AddNewSecretsAsync(List<SecretDto> secrets)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task DeleteSecretAsync(Guid secretId)
     {
         throw new NotImplementedException();
     }

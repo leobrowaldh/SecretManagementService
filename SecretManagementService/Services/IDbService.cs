@@ -1,4 +1,5 @@
 ﻿using SMSFunctionApp.Models;
+using SMSFunctionApp.Models.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,8 @@ public interface IDbService
     void SetContext(Dictionary<string, object?> contextVariables);
     void SetExecutingUser(string executingUser);
     Task<SecretNotificationInfo?> GetNotificationInfoAsync(Guid secretId, Guid appId);
-
     Task UpdateLastNotifiedAsync(Guid secretId, DateTime dateTime);
+    Task<List<SecretDto>> GetAllSecretsAsync();
+    Task AddNewSecretsAsync(List<SecretDto> secrets);
+    Task DeleteSecretAsync(Guid secretId);
 }

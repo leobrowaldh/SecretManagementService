@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Db.Dtos;
-public class ResponsePageDto<T>
+namespace Db.ResponseModels;
+public class ResponsePage<T>
 {
     public List<T> PageItems { get; init; }
     public int DbItemsCount { get; init; }

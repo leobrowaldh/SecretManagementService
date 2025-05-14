@@ -12,4 +12,5 @@ public class User
 {
     public Guid UserId { get; set; }
     public List<Subscriber> Subscribers { get; set; } = [];
+    public bool IsDeleted { get; set; }
 }
