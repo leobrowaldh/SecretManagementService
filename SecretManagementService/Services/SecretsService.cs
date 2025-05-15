@@ -68,21 +68,10 @@ public class SecretsService : ISecretsService
         }
     }
 
-    //TODO: implement logic to get secrets from database, not graphapi
     public async Task<List<SecretDto>?> GetExpiringSecretsAsync(int _daysUntilSecretsExpire)
     {
-        var appData = await _graphApiService.GetAppDataAsync();
 
-        var expiringSecrets = appData.ToSecretDtoListOfExpiringSecrets(_daysUntilSecretsExpire);
-
-        if (expiringSecrets == null || expiringSecrets.Count == 0)
-        {
-            _logger.LogInformation("No expiring secrets found.");
-        }
-        else
-        {
-            _logger.LogInformation("Successfully fetched {Count} expiring secrets.", expiringSecrets.Count);
-        }
+        var expiringSecrets = await _dbService.GetExpiringSecrets(_daysUntilSecretsExpire);
 
         return expiringSecrets;
     }

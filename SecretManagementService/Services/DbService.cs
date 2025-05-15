@@ -1,7 +1,6 @@
 ﻿using Db.DbModels;
 using Db.Repositories;
 using Microsoft.Extensions.Logging;
-using SecretManagementService.Models;
 using SMSFunctionApp.ExtensionMethods;
 using SMSFunctionApp.Models;
 using SMSFunctionApp.Models.DTOs;
@@ -11,9 +10,9 @@ namespace SecretManagementService.Services;
 public class DbService : IDbService
 {
     private readonly IApplicationRepository _applicationRepo;
-    private readonly IGenericRepository<Secret> _secretRepo;
+    private readonly ISecretRepository _secretRepo;
     private readonly ILogger<DbService> _logger;
-    public DbService(IApplicationRepository applicationRepo, IGenericRepository<Secret> secretRepo, ILogger<DbService> logger)
+    public DbService(IApplicationRepository applicationRepo, ISecretRepository secretRepo, ILogger<DbService> logger)
     {
         _applicationRepo = applicationRepo;
         _secretRepo = secretRepo;
@@ -124,8 +123,14 @@ public class DbService : IDbService
         }
     }
 
+    public async Task<List<SecretDto>> GetExpiringSecrets(int daysUntilExpiration)
+    {
+        var secrets = await _secretRepo.GetExpiringSecrets(daysUntilExpiration);
+        return secrets.ToSecretDtoList();
+    }
     public Task DeleteSecretAsync(Guid secretId)
     {
         throw new NotImplementedException();
     }
+
 }

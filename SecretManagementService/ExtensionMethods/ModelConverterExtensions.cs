@@ -19,22 +19,20 @@ public static class ModelConverterExtensions
         };
     }
 
-    public static List<SecretDto> ToSecretDtoListOfExpiringSecrets(this GraphApiGenericResponse<GraphApiApplicationResponse> appData, int daysUntilSecretsExpire)
+    public static List<SecretDto> ToSecretDtoList(this List<Secret> secrets)
     {
-        List<SecretDto> expiringSecrets = appData.value
-            .SelectMany(app => app.passwordCredentials
-                .Where(cred => cred.endDateTime < DateTime.Now.AddDays(daysUntilSecretsExpire))
-                .Select(cred => new SecretDto
-                {
-                    ExternalSecretId = cred.keyId,
-                    ExternalApplicationId = app.id,
-                    ClientId = app.appId,
-                    DisplayName = cred.displayName,
-                    EndDateTime = cred.endDateTime,
-                    ExternalProvider = EnIdentityProvider.Azure,
-                })
-            ).ToList();
-        return expiringSecrets;
+        return secrets
+            .Select(secret => new SecretDto
+            {
+                SecretId = secret.SecretId,
+                ExternalSecretId = secret.ExternalSecretId,
+                ApplicationId = secret.ApplicationId,
+                DisplayName = secret.DisplayName,
+                EndDateTime = secret.EndDateTime,
+                LastTimeNotified = secret.LastTimeNotified,
+                Seeded = secret.Seeded
+            })
+            .ToList();
     }
 
     public static List<SecretDto> ToSecretDtoList(this GraphApiGenericResponse<GraphApiApplicationResponse> appData)

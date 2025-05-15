@@ -5,14 +5,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Net.Http.Headers;
 using SecretManagementService.Services;
 using Microsoft.Azure.Functions.Worker;
-using SecretManagementService.Mocks;
 using SendGrid.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Db;
-using SharedResources.ExtensionMethods;
 using Db.Repositories;
 using Db.DbModels;
-using Microsoft.Data.SqlClient;
 using Db.Factories;
 using Db.Helpers;
 using Azure.Identity;
@@ -48,7 +45,7 @@ builder.Services.AddScoped<ISmsService, SmsService>();
 builder.Services.AddScoped<IDbService, DbService>();
 
 //DbRepos
-builder.Services.AddScoped<IGenericRepository<Secret>, SecretRepository>();
+builder.Services.AddScoped<ISecretRepository, SecretRepository>();
 builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
 builder.Services.AddScoped<IGenericRepository<Subscriber>, SubscriberRepository>();
 builder.Services.AddScoped<IGenericRepository<ApiEndpoint>, ApiEndpointRepository>();
