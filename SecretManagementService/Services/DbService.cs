@@ -1,5 +1,6 @@
 ﻿using Db.DbModels;
 using Db.Repositories;
+using Microsoft.Extensions.Logging;
 using SecretManagementService.Models;
 using SMSFunctionApp.ExtensionMethods;
 using SMSFunctionApp.Models;
@@ -9,12 +10,14 @@ using System.Data;
 namespace SecretManagementService.Services;
 public class DbService : IDbService
 {
-    private readonly IGenericRepository<Application> _applicationRepo;
+    private readonly IApplicationRepository _applicationRepo;
     private readonly IGenericRepository<Secret> _secretRepo;
-    public DbService(IGenericRepository<Application> applicationRepo, IGenericRepository<Secret> secretRepo)
+    private readonly ILogger<DbService> _logger;
+    public DbService(IApplicationRepository applicationRepo, IGenericRepository<Secret> secretRepo, ILogger<DbService> logger)
     {
         _applicationRepo = applicationRepo;
         _secretRepo = secretRepo;
+        _logger = logger;
     }
 
     public void SetContext(Dictionary<string, object?> contextVariables)
@@ -90,9 +93,35 @@ public class DbService : IDbService
         return dbSecrets;
     }
 
-    public Task AddNewSecretsAsync(List<SecretDto> secrets)
+    public async Task AddNewSecretsAsync(List<SecretDto> secrets)
     {
-        throw new NotImplementedException();
+        foreach (var newSecret in secrets)
+        {
+            Secret secret = newSecret.ToSecret();
+            secret.SecretId = Guid.NewGuid();
+            Application application = newSecret.ToApplication();
+            //check if app exists in database and add secret there, if not create new app first
+            if (application.ExternalApplicationId is not null or "")
+            {
+                Application? existingApplication = await _applicationRepo.GetApplicationsByExternalIdAsync(application.ExternalApplicationId);
+                if (existingApplication != null)
+                {
+                    existingApplication.Secrets.Add(secret);
+                    await _applicationRepo.UpdateItemAsync(existingApplication);
+                    _logger.LogInformation("Secret {SecretId} added to existing application {ApplicationId}.", secret.SecretId, existingApplication.ApplicationId);
+                }
+                else
+                {
+                    application.ApplicationId = Guid.NewGuid();
+                    application.Secrets.Add(secret);
+                    await _applicationRepo.AddItemAsync(application);
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Application id is null or empty.");
+            }
+        }
     }
 
     public Task DeleteSecretAsync(Guid secretId)

@@ -73,6 +73,6 @@ public class NotificationService : INotificationService
         {
             //send api request
         }
-        else { _logger.LogWarning("No contact method found for secret {SecretId}", secretNotificationInfo.SecretId); }
+        else { _logger.LogWarning("No contact method found for secret {SecretId}", secretNotificationInfo.Secret.SecretId); }
     }
 }

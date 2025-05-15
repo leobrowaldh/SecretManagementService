@@ -22,17 +22,19 @@ public class SecretsService : ISecretsService
         var appData = await _graphApiService.GetAppDataAsync();
 
         _logger.LogInformation("Fetching secrets from database...");
+        //if using more external providers, the appllications ExternalProvider should be checked first, to fetch the correct secrets.
+        //Currently we only use azure secrets and applications, so there is no need.
         var dbSecrets = await _dbService.GetAllSecretsAsync();
 
         List<SecretDto> fetchedSecrets = appData.ToSecretDtoList();
 
         // hashsets increase performance for large dataset comparisons
         var fetchedKeyIds = fetchedSecrets
-            .Select(fs => fs.SecretId)
+            .Select(fs => fs.ExternalSecretId)
             .ToHashSet();
 
         var dbSecretIds = dbSecrets
-            .Select(ds => ds.SecretId)
+            .Select(ds => ds.ExternalSecretId)
             .ToHashSet();
 
         var newSecretIds = fetchedKeyIds.Except(dbSecretIds).ToList();      // in fetched, not in db
@@ -45,7 +47,7 @@ public class SecretsService : ISecretsService
             _logger.LogInformation("Adding new secrets to database...");
 
             var newSecretDtos = fetchedSecrets
-                .Where(fs => newSecretIds.Contains(fs.SecretId))
+                .Where(fs => newSecretIds.Contains(fs.ExternalSecretId))
                 .ToList();
 
             await _dbService.AddNewSecretsAsync(newSecretDtos);
@@ -53,15 +55,15 @@ public class SecretsService : ISecretsService
         if (deletedSecretIds.Count > 0)
         {
             _logger.LogInformation("Deleting secrets from database...");
-            foreach (var secretId in deletedSecretIds)
+            foreach (var externalSecretId in deletedSecretIds)
             {
-                if (secretId == null)
+                if (externalSecretId == null)
                 {
-                    _logger.LogWarning("SecretId is null, skipping deletion.");
+                    _logger.LogWarning("ExternalSecretId is null, skipping deletion.");
                     continue;
                 }
-                await _dbService.DeleteSecretAsync((Guid)secretId);
-                _logger.LogInformation("Deleted secret with id {SecretId}", secretId);
+                SecretDto secret = dbSecrets.First(ds => ds.ExternalSecretId == externalSecretId);
+                await _dbService.DeleteSecretAsync((Guid)secret.SecretId!);
             }
         }
     }

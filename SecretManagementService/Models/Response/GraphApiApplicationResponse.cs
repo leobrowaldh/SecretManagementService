@@ -42,7 +42,7 @@ public record GraphApiApplicationResponse
     public Info? info { get; set; }
     public object[]? keyCredentials { get; set; }
     public Parentalcontrolsettings? parentalControlSettings { get; set; }
-    public Passwordcredential[]? passwordCredentials { get; set; }
+    public Passwordcredential[] passwordCredentials { get; set; } = [];
     public Publicclient? publicClient { get; set; }
     public Requiredresourceaccess[]? requiredResourceAccess { get; set; }
     public Verifiedpublisher? verifiedPublisher { get; set; }

@@ -30,6 +30,6 @@ public class ApiEndpoint
     public bool Seeded { get; set; }
 
     public Guid SubscriberId { get; set; }
-    public Subscriber Subscriber { get; set; }
+    public Subscriber Subscriber { get; set; } = default!;
     public bool IsDeleted { get; set; }
 }

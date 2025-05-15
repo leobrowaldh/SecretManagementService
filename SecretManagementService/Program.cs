@@ -45,15 +45,15 @@ builder.Services.AddScoped<ISecretsService, SecretsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISmsService, SmsService>();
-builder.Services.AddScoped<IDbService, DbServiceMock2>(); //***MOCKING!!***
+builder.Services.AddScoped<IDbService, DbService>();
 
 //DbRepos
 builder.Services.AddScoped<IGenericRepository<Secret>, SecretRepository>();
-builder.Services.AddScoped<IGenericRepository<Application>, ApplicationRepository>();
+builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
 builder.Services.AddScoped<IGenericRepository<Subscriber>, SubscriberRepository>();
 builder.Services.AddScoped<IGenericRepository<ApiEndpoint>, ApiEndpointRepository>();
-builder.Services.AddScoped<IEmailRepository, EmailRepository>();
-builder.Services.AddScoped<IPhoneRepository, PhoneRepository>();
+builder.Services.AddScoped<IGenericRepository<Email>, EmailRepository>();
+builder.Services.AddScoped<IGenericRepository<Phone>, PhoneRepository>();
 
 
 builder.Services.AddDbContext<SmsDbContext>(options =>

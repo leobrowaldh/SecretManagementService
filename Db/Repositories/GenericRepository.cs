@@ -12,9 +12,9 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
     protected readonly DbContext _dbContext;
     protected readonly DbSet<T> _dbSet;
-    private readonly DbConnection _connection;
-    private Dictionary<string, object?> _sessionContext = new();
-    private string _executingUser = string.Empty;
+    protected readonly DbConnection _connection;
+    protected Dictionary<string, object?> _sessionContext = new();
+    protected string _executingUser = string.Empty;
 
     public GenericRepository(DbContext dbContext)
     {

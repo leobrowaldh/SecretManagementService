@@ -1,4 +1,5 @@
 ﻿using Db.DbModels;
+using Db.Shared;
 using SecretManagementService.Models.Response;
 using SMSFunctionApp.Models.DTOs;
 
@@ -25,12 +26,12 @@ public static class ModelConverterExtensions
                 .Where(cred => cred.endDateTime < DateTime.Now.AddDays(daysUntilSecretsExpire))
                 .Select(cred => new SecretDto
                 {
-                    SecretId = Guid.TryParse(cred.keyId, out var parsedKeyId) ? parsedKeyId : null,
-                    ApplicationId = Guid.TryParse(app.id, out var parsedApplicationId) ? parsedApplicationId : null,
-                    AppId = Guid.TryParse(app.appId, out var parsedAppId) ? parsedAppId : null,
+                    ExternalSecretId = cred.keyId,
+                    ExternalApplicationId = app.id,
+                    ClientId = app.appId,
                     DisplayName = cred.displayName,
-                    EndDateTime = cred.endDateTime
-
+                    EndDateTime = cred.endDateTime,
+                    ExternalProvider = EnIdentityProvider.Azure,
                 })
             ).ToList();
         return expiringSecrets;
@@ -42,14 +43,40 @@ public static class ModelConverterExtensions
             .SelectMany(app => app.passwordCredentials
                 .Select(cred => new SecretDto
                 {
-                    SecretId = Guid.TryParse(cred.keyId, out var parsedKeyId) ? parsedKeyId : null,
-                    ApplicationId = Guid.TryParse(app.id, out var parsedApplicationId) ? parsedApplicationId : null,
-                    AppId = Guid.TryParse(app.appId, out var parsedAppId) ? parsedAppId : null,
+                    ExternalSecretId = cred.keyId,
+                    ExternalApplicationId = app.id,
+                    ClientId = app.appId,
                     DisplayName = cred.displayName,
-                    EndDateTime = cred.endDateTime
-
+                    EndDateTime = cred.endDateTime,
+                    ExternalProvider = EnIdentityProvider.Azure,
                 })
             ).ToList();
         return expiringSecrets;
+    }
+
+    public static Secret ToSecret(this SecretDto secretDto)
+    {
+        return new Secret
+        {
+            SecretId = secretDto.SecretId ?? Guid.Empty,
+            ExternalSecretId = secretDto.ExternalSecretId ?? "",
+            ApplicationId = secretDto.ApplicationId ?? Guid.Empty,
+            DisplayName = secretDto.DisplayName,
+            EndDateTime = secretDto.EndDateTime,
+            LastTimeNotified = secretDto.LastTimeNotified,
+            Seeded = secretDto.Seeded
+        };
+    }
+
+    public static Application ToApplication(this SecretDto secretDto)
+    {
+        return new Application
+        {
+            ApplicationId = secretDto.ApplicationId ?? Guid.Empty,
+            ExternalApplicationId = secretDto.ExternalApplicationId ?? "",
+            ExternalProvider = secretDto.ExternalProvider,
+            ClientId = secretDto.ClientId ?? "",
+            Seeded = secretDto.Seeded
+        };
     }
 }

@@ -47,6 +47,10 @@ public class SmsDbContext: DbContext
             .WithMany(a => a.Phones)
             .UsingEntity(j => j.ToTable("PhoneApplication", "suprusr"));
 
+        //Indexing:
+        modelBuilder.Entity<Application>()
+            .HasIndex(a => a.ExternalApplicationId)
+            .HasDatabaseName("IX_Applications_ExternalApplicationId");
     }
 
 }
