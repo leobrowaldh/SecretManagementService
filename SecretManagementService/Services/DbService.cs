@@ -23,10 +23,12 @@ public class DbService : IDbService
     public void SetContext(Dictionary<string, object?> contextVariables)
     {
         _applicationRepo.SetContext(contextVariables);
+        _secretRepo.SetContext(contextVariables);
     }
     public void SetExecutingUser(string executingUser)
     {
         _applicationRepo.SetExecutingUser(executingUser);
+        _secretRepo.SetExecutingUser(executingUser);
     }
 
     public async Task<SecretNotificationInfo?> GetNotificationInfoAsync(Guid secretId, Guid appId)
@@ -118,8 +120,8 @@ public class DbService : IDbService
                 Application? existingApplication = await _applicationRepo.GetApplicationsByExternalIdAsync(application.ExternalApplicationId);
                 if (existingApplication != null)
                 {
-                    existingApplication.Secrets.Add(secret);
-                    await _applicationRepo.UpdateItemAsync(existingApplication);
+                    secret.ApplicationId = existingApplication.ApplicationId;
+                    await _secretRepo.AddItemAsync(secret);
                     _logger.LogInformation("Secret {SecretId} added to existing application {ApplicationId}.", secret.SecretId, existingApplication.ApplicationId);
                 }
                 else
@@ -127,6 +129,7 @@ public class DbService : IDbService
                     application.ApplicationId = Guid.NewGuid();
                     application.Secrets.Add(secret);
                     await _applicationRepo.AddItemAsync(application);
+                    _logger.LogInformation("Secret {SecretId} added to new application {ApplicationId}.", secret.SecretId, application.ApplicationId);
                 }
             }
             else

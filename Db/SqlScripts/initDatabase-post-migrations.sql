@@ -44,9 +44,8 @@ GRANT SELECT, INSERT, DELETE ON SCHEMA::usr TO UserRole;
 GRANT SELECT ON adm.Applications TO UserRole;
 
 --Function app read contact info and update notification Dates, as well as fetching subscriberid
-GRANT SELECT, UPDATE ON SCHEMA::usr TO NotificationFunctionAppRole;
-GRANT SELECT ON SCHEMA::suprusr TO NotificationFunctionAppRole;
-GRANT SELECT ON SCHEMA::adm TO NotificationFunctionAppRole;
+GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::usr TO NotificationFunctionAppRole;
+GRANT SELECT, INSERT, UPDATE, DELETE ON adm.Applications TO NotificationFunctionAppRole;
 
 --Granting decrypting capabilities to the managed identity
 GRANT VIEW ANY COLUMN MASTER KEY DEFINITION TO [func-SecretManagementService-development-001];

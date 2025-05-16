@@ -19,7 +19,7 @@ public class DbSync
     }
 
     [Function(nameof(DbSync))]
-    public async Task Run([TimerTrigger("0 0 6 * * *")] TimerInfo myTimer)
+    public async Task Run([TimerTrigger("0 0 6 * * *", RunOnStartup = true)] TimerInfo myTimer)
     {
         _logger.LogInformation("C# Timer trigger function DbSync executed at: {executionTime}", DateTime.Now);
         
