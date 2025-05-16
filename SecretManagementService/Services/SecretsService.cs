@@ -14,6 +14,8 @@ public class SecretsService : ISecretsService
         _graphApiService = graphApiService;
         _dbService = dbService;
         _logger = logger;
+
+        _dbService.SetExecutingUser("AppScopedUser_BackgroundTasks");
     }
 
     //currently for azure, could be others.
