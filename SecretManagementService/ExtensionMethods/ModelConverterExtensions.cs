@@ -59,7 +59,7 @@ public static class ModelConverterExtensions
             SecretId = secretDto.SecretId ?? Guid.Empty,
             ExternalSecretId = secretDto.ExternalSecretId ?? "",
             ApplicationId = secretDto.ApplicationId ?? Guid.Empty,
-            DisplayName = secretDto.DisplayName,
+            DisplayName = secretDto.DisplayName ?? "",
             EndDateTime = secretDto.EndDateTime,
             LastTimeNotified = secretDto.LastTimeNotified,
             Seeded = secretDto.Seeded

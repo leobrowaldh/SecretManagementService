@@ -27,13 +27,12 @@ public class NotificationService : INotificationService
         _dbService.SetExecutingUser("AppScopedUser_BackgroundTasks");
     }
 
-    public async Task<SecretNotificationInfo> FetchNotificationInfoAsync(Guid secretId, Guid appId)
+    public async Task<SecretNotificationInfo?> FetchNotificationInfoAsync(Guid secretId, Guid appId)
     {
         var secretNotificationInfo = await _dbService.GetNotificationInfoAsync(secretId, appId);
         if (secretNotificationInfo == null)
         {
-            //if the secret is registered in our app, we need to have the stored notification info.
-            throw new InvalidOperationException($"No notification info found for secretId {secretId}");
+            return null;
         }
 
         return secretNotificationInfo;
@@ -43,6 +42,11 @@ public class NotificationService : INotificationService
     {
         if (secretNotificationInfo.ContactMethod.IsEmail)
         {
+            if (secretNotificationInfo.ContactMethod.Emails == null || secretNotificationInfo.ContactMethod.Emails.Count == 0)
+            {
+                _logger.LogWarning("No email address found for application {ApplicationId}", secretNotificationInfo.Secret.ApplicationId);
+                return;
+            }
             foreach (var email in secretNotificationInfo.ContactMethod.Emails)
             {
                 _logger.LogInformation("Sending email notification for secret {SecretId}", secretNotificationInfo.Secret.SecretId);
@@ -60,7 +64,11 @@ public class NotificationService : INotificationService
             _logger.LogInformation("SMS Notification Service is currently Disabled, upgraded Twilio account is required.");
             //Cannot verify swedish numbers by sms, and cannot verify by voicecall in free acounts.
             //So we need to upgrade account to test this.
-
+            //if (secretNotificationInfo.ContactMethod.PhoneNumbers == null || secretNotificationInfo.ContactMethod.PhoneNumbers.Count == 0)
+            //{
+            //    _logger.LogWarning("No phone number found for application {ApplicationId}", secretNotificationInfo.Secret.ApplicationId);
+            //    return;
+            //}
             //foreach (var phoneNumber in secretNotificationInfo.ContactMethod.PhoneNumbers)
             //{
             //    _logger.LogInformation("Sending SMS notification for secret {SecretId}", secretNotificationInfo.SecretId);

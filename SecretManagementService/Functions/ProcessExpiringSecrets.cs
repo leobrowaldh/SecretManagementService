@@ -20,35 +20,38 @@ public class ProcessExpiringSecrets
 
     [Function(nameof(ProcessExpiringSecrets))]
     public async Task ProcessSecretsAsync(
-        [QueueTrigger("expiringsecrets-queue")] CancellationToken cancellationToken, string message, FunctionContext context)
+        [QueueTrigger("expiringsecrets-queue")] string message)
     {
-        //another way of creating a logger, using functionContext, which provide function execution context.
-        var logger = context.GetLogger("ProcessExpiringSecrets");
-
+        _logger.LogInformation("Queue triggered function ProcessExpiringSecrets executed at: {Current DateTime}", DateTime.Now);
         var secret = JsonSerializer.Deserialize<SecretDto>(message) 
             ?? throw new InvalidOperationException($"Failed to deserialize message, message is null or empty: {message}");
 
-        logger.LogInformation("Calling notification service...");
+        _logger.LogInformation("Calling notification service...");
 
         if (secret is null || secret.SecretId == null)
         {
-            logger.LogError("Secret is null, skipping notification.");
+            _logger.LogError("Secret is null, skipping notification.");
             return;
         }
         if (secret.ApplicationId is null)
         {
-            logger.LogError("Secret {secretId} is not associated to any Application, skipping notification.", secret.SecretId);
+            _logger.LogError("Secret {secretId} is not associated to any Application, skipping notification.", secret.SecretId);
             return;
         }
-        SecretNotificationInfo secretNotificationInfo = await _notificationService.FetchNotificationInfoAsync((Guid)secret.SecretId, (Guid)secret.ApplicationId);
+        SecretNotificationInfo? secretNotificationInfo = await _notificationService.FetchNotificationInfoAsync((Guid)secret.SecretId, (Guid)secret.ApplicationId);
 
+        if (secretNotificationInfo == null)
+        {
+            _logger.LogInformation("SecretNotificationInfo is null, skipping notification.");
+            return;
+        }
         if (secretNotificationInfo.ShouldNotify)
         {
             await _notificationService.NotifyAsync(secretNotificationInfo);
         }
         else
         {
-            logger.LogInformation("No notification needed at this point in time.");
+            _logger.LogInformation("No notification needed at this point in time.");
         }    
     }
 }

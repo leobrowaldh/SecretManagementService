@@ -48,7 +48,8 @@ public class EmailRepository : IEmailRepository
                         SELECT COUNT(*) FROM suprusr.Emails
                         WHERE EmailAddress LIKE @Filter";
                     countCmd.Parameters.AddWithValue("@Filter", $"%{filter}%");
-                    totalCount = (int)(await countCmd.ExecuteScalarAsync());
+                    totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync() ?? 0);
+
                 }
 
                 using var cmd = connection.CreateCommand();

@@ -21,5 +21,5 @@ public interface IDbService
     Task<List<SecretDto>> GetAllSecretsAsync();
     Task AddNewSecretsAsync(List<SecretDto> secrets);
     Task DeleteSecretAsync(Guid secretId);
-    Task<List<SecretDto>> GetExpiringSecrets(int daysUntilExpiration);
+    Task<List<SecretDto>> GetExpiringSecretsAsync(int daysUntilExpiration);
 }

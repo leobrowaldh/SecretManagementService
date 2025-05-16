@@ -16,6 +16,7 @@ public class SecretsService : ISecretsService
         _logger = logger;
     }
 
+    //currently for azure, could be others.
     public async Task SyncDatabaseSecretsWithSource()
     {
         _logger.LogInformation("Fetching secrets from GraphApi...");
@@ -71,8 +72,6 @@ public class SecretsService : ISecretsService
     public async Task<List<SecretDto>?> GetExpiringSecretsAsync(int _daysUntilSecretsExpire)
     {
 
-        var expiringSecrets = await _dbService.GetExpiringSecrets(_daysUntilSecretsExpire);
-
-        return expiringSecrets;
+        return await _dbService.GetExpiringSecretsAsync(_daysUntilSecretsExpire);
     }
 }

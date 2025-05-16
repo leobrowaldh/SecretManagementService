@@ -1,5 +1,6 @@
 ﻿using Db.DbModels;
 using Db.Repositories;
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Logging;
 using SMSFunctionApp.ExtensionMethods;
 using SMSFunctionApp.Models;
@@ -32,16 +33,28 @@ public class DbService : IDbService
     {
         var application = await _applicationRepo.ReadItemAsync(appId, false);
 
-        if (application == null)
+        //Check application notification settings
+        switch (application)
         {
-            return null;
+            case null:
+                _logger.LogError("Application with id {AppId} not found.", appId);
+                return null;
+
+            case { SubscriberId: null }:
+                _logger.LogInformation("Application with id {AppId} has no subscriber.", appId);
+                return null;
+
+            case { ContactByApiEndpoint: false, ContactByEmail: false, ContactBySMS: false }:
+                _logger.LogWarning("No contact method selected for application {AppId}.", appId);
+                return null;
         }
+
         var secret = application.Secrets.FirstOrDefault(s => s.SecretId == secretId);
         if (secret == null)
         {
+            _logger.LogError("Secret with id {SecretId} not found in application {AppId}.", secretId, appId);
             return null;
         }
-
         var notificationInfo = new SecretNotificationInfo
         {
             Secret = secret.ToSecretDto(),
@@ -123,7 +136,7 @@ public class DbService : IDbService
         }
     }
 
-    public async Task<List<SecretDto>> GetExpiringSecrets(int daysUntilExpiration)
+    public async Task<List<SecretDto>> GetExpiringSecretsAsync(int daysUntilExpiration)
     {
         var secrets = await _secretRepo.GetExpiringSecrets(daysUntilExpiration);
         return secrets.ToSecretDtoList();

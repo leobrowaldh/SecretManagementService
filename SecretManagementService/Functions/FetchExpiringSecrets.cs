@@ -3,6 +3,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using SecretManagementService.Services;
 using Microsoft.Extensions.Configuration;
+using SMSFunctionApp.Models.DTOs;
 
 namespace SecretManagementService.Functions;
 
@@ -22,11 +23,11 @@ public class FetchExpiringSecrets
     [Function(nameof(FetchExpiringSecrets))]
     [QueueOutput("expiringsecrets-queue")]  //  This binds the function output to the queue
     public async Task<IList<string>?> FetchSecretsAsync(
-        [TimerTrigger("0 0 8 * * *", RunOnStartup = true)] TimerInfo myTimer)
+        [TimerTrigger("0 0 8 * * *")] TimerInfo myTimer)
     {
         _logger.LogInformation("Timer trigger function FetchExpiringSecrets executed at: {Current DateTime}", DateTime.Now);
 
-        var expiringSecrets = await _secretsService.GetExpiringSecretsAsync(_daysUntilSecretsExpire);
+        List<SecretDto>? expiringSecrets = await _secretsService.GetExpiringSecretsAsync(_daysUntilSecretsExpire);
 
         if (expiringSecrets == null || expiringSecrets.Count == 0)
         {
