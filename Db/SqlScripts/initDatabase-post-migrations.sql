@@ -72,7 +72,7 @@ RETURNS TABLE
 WITH SCHEMABINDING
 AS
 RETURN 
-    SELECT 1
+    SELECT 1 AS Result
     WHERE 
     IS_MEMBER('InternalAdminRole') = 1
     OR IS_MEMBER('db_owner') = 1
@@ -80,12 +80,12 @@ RETURN
     OR @SubscriberId = CAST(SESSION_CONTEXT(N'SubscriberId') AS UNIQUEIDENTIFIER);
 GO
 
-CREATE FUNCTION rls.fn_application_filter(@ApplicationId  UNIQUEIDENTIFIER)
+CREATE FUNCTION rls.fn_application_filter(@ApplicationId UNIQUEIDENTIFIER)
 RETURNS TABLE
 WITH SCHEMABINDING
 AS
 RETURN 
-    SELECT 1
+    SELECT 1 AS Result
     WHERE
     IS_MEMBER('InternalAdminRole') = 1
     OR IS_MEMBER('db_owner') = 1
@@ -98,6 +98,26 @@ RETURN
     );
 GO
 
+CREATE FUNCTION rls.fn_user_subscriber_filter(@UserId UNIQUEIDENTIFIER)
+RETURNS TABLE
+WITH SCHEMABINDING
+AS
+RETURN 
+    SELECT 1 AS Result
+    WHERE
+    IS_MEMBER('InternalAdminRole') = 1
+    OR IS_MEMBER('db_owner') = 1
+    OR IS_MEMBER('NotificationFunctionAppRole') = 1
+    OR EXISTS (
+        SELECT 1
+        FROM suprusr.SubscriberUsers su
+        WHERE su.UserId = @UserId
+          AND su.SubscriberId = CAST(SESSION_CONTEXT(N'SubscriberId') AS UNIQUEIDENTIFIER)
+    );
+GO
+
+
+
 
 
 
@@ -107,7 +127,7 @@ ADD FILTER PREDICATE rls.fn_application_filter(ApplicationId)
     ON usr.Secrets,
 ADD FILTER PREDICATE rls.fn_subscriber_filter(SubscriberId)
     ON adm.Applications,
-ADD FILTER PREDICATE rls.fn_subscriber_filter(SubscriberId)
+ADD FILTER PREDICATE rls.fn_user_subscriber_filter(UserId)
     ON suprusr.Users,
 ADD FILTER PREDICATE rls.fn_subscriber_filter(SubscriberId)
     ON suprusr.Phones,
@@ -116,11 +136,16 @@ ADD FILTER PREDICATE rls.fn_subscriber_filter(SubscriberId)
 ADD FILTER PREDICATE rls.fn_subscriber_filter(SubscriberId)
     ON suprusr.ApiEndpoints,
 ADD FILTER PREDICATE rls.fn_application_filter(ApplicationId)
-    ON suprusr.EmailApplication,
+    ON suprusr.EmailApplications,
 ADD FILTER PREDICATE rls.fn_application_filter(ApplicationId)
-    ON suprusr.PhoneApplication
+    ON suprusr.PhoneApplications,
+ADD FILTER PREDICATE rls.fn_subscriber_filter(SubscriberId)
+    ON suprusr.SubscriberUsers,
+ADD FILTER PREDICATE rls.fn_subscriber_filter(SubscriberId)
+    ON adm.Subscribers
 WITH (STATE = ON);
 GO
+
 
 
 

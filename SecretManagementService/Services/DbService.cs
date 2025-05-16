@@ -63,8 +63,8 @@ public class DbService : IDbService
                 IsEmail = application.ContactByEmail,
                 IsSMS = application.ContactBySMS,
                 IsApiEndpoint = application.ContactByApiEndpoint,
-                Emails = application.Emails.Select(e => e.EmailAddress).ToList(),
-                PhoneNumbers = application.Phones.Select(p => p.PhoneNumber).ToList(),
+                Emails = application.Subscriber?.Emails.Select(e => e.EmailAddress).ToList() ?? [],
+                PhoneNumbers = application.Subscriber?.Phones.Select(p => p.PhoneNumber).ToList() ?? [],
                 ApiInfo = new ApiInfo
                 {
                     //Not yet implemented, add logic here when models are fully defined.

@@ -12,7 +12,7 @@ public class Email
     [EmailAddress]
     public required string EmailAddress { get; set; }
     public bool Seeded { get; set; }
-    public List<Application> Applications { get; set; } = [];
+    public List<EmailApplication> EmailApplications { get; set; } = [];
     public Subscriber Subscriber { get; set; } = default!;
     public required Guid SubscriberId { get; set; }
     public bool IsDeleted { get; set; }

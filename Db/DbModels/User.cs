@@ -11,6 +11,6 @@ namespace Db.DbModels;
 public class User
 {
     public Guid UserId { get; set; }
-    public List<Subscriber> Subscribers { get; set; } = [];
+    public List<SubscriberUser> SubscriberUsers { get; set; } = [];
     public bool IsDeleted { get; set; }
 }

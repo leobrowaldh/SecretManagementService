@@ -15,7 +15,7 @@ public class Subscriber
     public bool Seeded { get; set; }
 
     public List<Application> Applications { get; set; } = [];
-    public List<User> Users { get; set; } = [];
+    public List<SubscriberUser> SubscriberUsers { get; set; } = [];
     public List<Phone> Phones { get; set; } = [];
     public List<Email> Emails { get; set; } = [];
     public ApiEndpoint? ApiEndpoint { get; set; }

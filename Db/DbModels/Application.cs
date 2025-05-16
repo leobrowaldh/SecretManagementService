@@ -19,8 +19,8 @@ public class Application
     public bool ContactByEmail { get; set; }
     public bool ContactBySMS { get; set; }
     public bool ContactByApiEndpoint { get; set; }
-    public List<Phone> Phones { get; set; } = [];
-    public List<Email> Emails { get; set; } = [];
+    public List<PhoneApplication> PhoneApplications { get; set; } = [];
+    public List<EmailApplication> EmailApplications { get; set; } = [];
     public Subscriber? Subscriber { get; set; }
     public Guid? SubscriberId { get; set; }
     public List<Secret> Secrets { get; set; } = [];

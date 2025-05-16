@@ -17,7 +17,7 @@ public class Phone
     [Phone]
     public required string PhoneNumber { get; set; }
     public bool Seeded { get; set; }
-    public List<Application> Applications { get; set; } = [];
+    public List<PhoneApplication> PhoneApplications { get; set; } = [];
     public Subscriber Subscriber { get; set; } = default!;
     public required Guid SubscriberId { get; set; }
     public bool IsDeleted { get; set; }
