@@ -99,7 +99,7 @@ stages:
                     isFlexConsumption: true
                     appName: $(functionAppName)
                     package: '$(Pipeline.Workspace)/drop/**/*.zip'
-                    deploymentMethod: 'auto'
+                    deploymentMethod: 'runFromPackage'
                     runtimeStack: 'DOTNET-ISOLATED|9.0'
                     appSettings: >
                       -KEY_VAULT_URI $(keyVaultUri)
