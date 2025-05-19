@@ -19,7 +19,8 @@ public class DbSync
     }
 
     [Function(nameof(DbSync))]
-    public async Task Run([TimerTrigger("0 0 6 * * *", RunOnStartup = true)] TimerInfo myTimer)
+    [FixedDelayRetry(2, "00:00:10")] // Retry 2 times with a 10-second delay between attempts
+    public async Task Run([TimerTrigger("0 0 6 * * *")] TimerInfo myTimer)
     {
         _logger.LogInformation("C# Timer trigger function DbSync executed at: {executionTime}", DateTime.Now);
         

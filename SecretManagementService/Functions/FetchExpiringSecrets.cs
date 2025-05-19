@@ -22,6 +22,7 @@ public class FetchExpiringSecrets
 
     [Function(nameof(FetchExpiringSecrets))]
     [QueueOutput("expiringsecrets-queue")]  //  This binds the function output to the queue
+    [FixedDelayRetry(2, "00:00:10")] // Retry 2 times with a 10-second delay between attempts
     public async Task<IList<string>?> FetchSecretsAsync(
         [TimerTrigger("0 0 8 * * *", RunOnStartup = true)] TimerInfo myTimer)
     {
