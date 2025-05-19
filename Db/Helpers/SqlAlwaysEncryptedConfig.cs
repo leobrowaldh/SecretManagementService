@@ -4,7 +4,7 @@ using Azure.Identity;
 
 namespace Db.Helpers;
 
-public static class SqlAlwaysEncryptedLocalConfig
+public static class SqlAlwaysEncryptedConfig
 {
     /// <summary>
     /// Configures the keyvault access for fetching the master key

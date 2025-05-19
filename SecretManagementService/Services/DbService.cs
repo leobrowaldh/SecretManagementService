@@ -144,9 +144,10 @@ public class DbService : IDbService
         var secrets = await _secretRepo.GetExpiringSecrets(daysUntilExpiration);
         return secrets.ToSecretDtoList();
     }
-    public Task DeleteSecretAsync(Guid secretId)
+    public async Task DeleteSecretAsync(Guid secretId)
     {
-        throw new NotImplementedException();
+        var deletedSecret = await _secretRepo.DeleteItemAsync(secretId);
+        _logger.LogInformation("Secret {SecretId} deleted.", secretId);
     }
 
 }

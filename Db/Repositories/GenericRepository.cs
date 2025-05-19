@@ -1,12 +1,10 @@
 ﻿using Db.Helpers;
-using Db.Repositories;
 using Db.ResponseModels;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Data.Common;
 
-namespace DbRepos;
+namespace Db.Repositories;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
