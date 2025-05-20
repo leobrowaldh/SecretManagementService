@@ -27,15 +27,6 @@ if (string.IsNullOrEmpty(keyVaultUri))
 //TODO: optimize DefaultAzureCredential
 else { builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential()); }
 
-//// entra jwt handling.... 
-//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
-//builder.Services.AddAuthorization();
-
-//var scopeRequiredByApi = builder.Configuration["AzureAd:Scopes"] ?? "";
-
-//....
-
 builder.ConfigureFunctionsWebApplication();
 
 // Application Insights:
