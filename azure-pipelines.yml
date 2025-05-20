@@ -37,6 +37,7 @@ stages:
 
           # 2. Restore & Build
           - script: |
+              dotnet clean
               dotnet restore
               dotnet build --configuration Release
             displayName: 'Restore and Build Solution'
@@ -99,7 +100,7 @@ stages:
                     isFlexConsumption: true
                     appName: $(functionAppName)
                     package: '$(Pipeline.Workspace)/drop/build$(Build.BuildId).zip'
-                    deploymentMethod: 'runFromPackage'
+                    deploymentMethod: 'auto'
                     runtimeStack: 'DOTNET-ISOLATED|9.0'
                     appSettings: >
                       -KEY_VAULT_URI $(keyVaultUri)
