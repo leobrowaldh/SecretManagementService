@@ -98,6 +98,7 @@ stages:
                     azureSubscription: $(serviceConnection)
                     appType: functionAppLinux
                     isFlexConsumption: true
+                    deploymentMethod: zipDeploy
                     appName: $(functionAppName)
                     package: '$(Pipeline.Workspace)/drop/build$(Build.BuildId).zip'
                     runtimeStack: 'DOTNET-ISOLATED|9.0'
