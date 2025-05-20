@@ -12,9 +12,6 @@ using Db.Repositories;
 using Db.DbModels;
 using Db.Helpers;
 using Azure.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Identity.Web;
-using Microsoft.Identity.Web.Resource;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
