@@ -98,7 +98,7 @@ stages:
                     appType: functionAppLinux
                     isFlexConsumption: true
                     appName: $(functionAppName)
-                    package: '$(Pipeline.Workspace)/drop/**/*.zip'
+                    package: '$(Pipeline.Workspace)/drop/build$(Build.BuildId).zip'
                     deploymentMethod: 'runFromPackage'
                     runtimeStack: 'DOTNET-ISOLATED|9.0'
                     appSettings: >
