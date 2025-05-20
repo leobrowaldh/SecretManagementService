@@ -37,6 +37,7 @@ stages:
 
           # 2. Restore & Build
           - script: |
+              dotnet clean
               dotnet restore
               dotnet build --configuration Release
             displayName: 'Restore and Build Solution'
@@ -98,7 +99,7 @@ stages:
                     appType: functionAppLinux
                     isFlexConsumption: true
                     appName: $(functionAppName)
-                    package: '$(Pipeline.Workspace)/drop/**/*.zip'
+                    package: '$(Pipeline.Workspace)/drop/build$(Build.BuildId).zip'
                     deploymentMethod: 'runFromPackage'
                     runtimeStack: 'DOTNET-ISOLATED|9.0'
                     appSettings: >
