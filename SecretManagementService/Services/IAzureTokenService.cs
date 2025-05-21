@@ -8,5 +8,5 @@ namespace SecretManagementService.Services;
 
 public interface IAzureTokenService
 {
-    public Task<string> GetAccessTokenAsync();
+    public Task<string> GetGraphApiAccessTokenAsync();
 }

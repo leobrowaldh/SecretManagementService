@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using SecretManagementService.Services;
 using Microsoft.Extensions.Configuration;
 using SMSFunctionApp.Models.DTOs;
+using SMSFunctionApp.Helpers;
 
 namespace SecretManagementService.Functions;
 
@@ -27,7 +28,8 @@ public class FetchExpiringSecrets
     {
         _logger.LogInformation("Timer trigger function FetchExpiringSecrets executed at: {Current DateTime}", DateTime.Now);
 
-        List<SecretDto>? expiringSecrets = await _secretsService.GetExpiringSecretsAsync(_daysUntilSecretsExpire);
+        List<SecretDto>? expiringSecrets = await RetryHelper.ExecuteWithSqlRetryAsync(() =>
+            _secretsService.GetExpiringSecretsAsync(_daysUntilSecretsExpire), _logger);
 
         if (expiringSecrets == null || expiringSecrets.Count == 0)
         {

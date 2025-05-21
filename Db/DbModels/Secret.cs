@@ -6,7 +6,6 @@ namespace Db.DbModels;
 [Table("Secrets", Schema = "usr")]
 public class Secret
 {
-    //SecretId = KeyId in Azures EntraId, can be used also with other cloud providers
     public Guid SecretId { get; set; }
     public string ExternalSecretId { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;

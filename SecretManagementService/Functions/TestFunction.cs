@@ -22,7 +22,7 @@ public class TestFunction
     {
         _logger.LogInformation("C# HTTP trigger function processed a request.");
 
-        var token = await _tokenService.GetAccessTokenAsync();
+        var token = await _tokenService.GetGraphApiAccessTokenAsync();
         _logger.LogInformation($"Generated Token: {token}");
 
         return new OkObjectResult("Welcome to Azure Functions!");

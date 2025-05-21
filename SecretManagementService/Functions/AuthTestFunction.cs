@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using SMSFunctionApp.AzureHelpers;
 using System.Security.Claims;
 
 namespace SMSFunctionApp.Functions;
@@ -17,19 +16,18 @@ public class AuthTestFunction
     }
 
     [Function("AuthTestFunction")]
-    public IActionResult Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req)
+    public IActionResult Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
+    FunctionContext executionContext)
     {
-        _logger.LogInformation("C# HTTP trigger function processed a request.");
+        var principal = req.HttpContext.User;
 
-        var user = ClaimsPrincipalParser.Parse(req);
-
-        if (!user.Identity?.IsAuthenticated ?? true)
+        if (principal == null || !principal.Identity?.IsAuthenticated == true)
         {
             return new UnauthorizedResult();
         }
 
-        var name = user.Identity.Name ?? user.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown";
-        var roles = string.Join(", ", user.FindAll(ClaimTypes.Role).Select(r => r.Value));
+        var name = principal.Identity?.Name ?? "Unknown";
+        var roles = string.Join(", ", principal.FindAll(ClaimTypes.Role).Select(r => r.Value));
 
         return new OkObjectResult($"Hello {name}! Your roles: {roles}");
     }

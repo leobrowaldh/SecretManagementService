@@ -1,8 +1,10 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using SecretManagementService.Services;
+using SMSFunctionApp.Helpers;
+using System;
+using System.Threading.Tasks;
 
 namespace SMSFunctionApp.Functions;
 
@@ -25,11 +27,8 @@ public class DbSync
         _logger.LogInformation("C# Timer trigger function DbSync executed at: {executionTime}", DateTime.Now);
         
         _logger.LogInformation("Syncronizing database secrets with source...");
-        await _secretsService.SyncDatabaseSecretsWithSource();
 
-        if (myTimer.ScheduleStatus is not null)
-        {
-            _logger.LogInformation("Next timer schedule at: {nextSchedule}", myTimer.ScheduleStatus.Next);
-        }
+        await RetryHelper.ExecuteWithSqlRetryAsync(() => 
+            _secretsService.SyncDatabaseSecretsWithSource(),_logger);
     }
 }
