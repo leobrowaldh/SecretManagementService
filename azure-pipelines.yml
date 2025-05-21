@@ -109,3 +109,6 @@ stages:
                       -AzureFunctionsWebHost__hostid $(hostId)
                       -ASPNETCORE_ENVIRONMENT $(environment)
                       -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
+                      -AzureAd__Instance https://login.microsoftonline.com/
+                      -AzureAd__TenantId $(tenantId)
+                      -AzureAd__ClientId $(clientId)
