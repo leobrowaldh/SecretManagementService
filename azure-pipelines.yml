@@ -98,9 +98,9 @@ stages:
                     azureSubscription: $(serviceConnection)
                     appType: functionAppLinux
                     isFlexConsumption: true
+                    deploymentMethod: zipDeploy
                     appName: $(functionAppName)
                     package: '$(Pipeline.Workspace)/drop/build$(Build.BuildId).zip'
-                    deploymentMethod: auto
                     runtimeStack: 'DOTNET-ISOLATED|9.0'
                     appSettings: >
                       -KEY_VAULT_URI $(keyVaultUri)
@@ -109,3 +109,6 @@ stages:
                       -AzureFunctionsWebHost__hostid $(hostId)
                       -ASPNETCORE_ENVIRONMENT $(environment)
                       -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
+                      -AzureAd__Instance https://login.microsoftonline.com/
+                      -AzureAd__TenantId $(tenantId)
+                      -AzureAd__ClientId $(clientId)
