@@ -30,7 +30,7 @@ if (string.IsNullOrEmpty(keyVaultUri))
 else { builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential()); }
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApi(builder.Configuration); //validates the JWT
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd")); //validates the JWT
 
 builder.ConfigureFunctionsWebApplication();
 
