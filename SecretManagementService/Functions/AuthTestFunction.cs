@@ -52,7 +52,11 @@ public class AuthTestFunction
         var tokenHandler = new JwtSecurityTokenHandler();
         var validationParameters = new TokenValidationParameters
         {
-            ValidIssuer = "https://login.microsoftonline.com/d87548be-2c3c-454d-8214-8941643fc99f/v2.0", 
+            ValidIssuers =
+            [
+                "https://login.microsoftonline.com/d87548be-2c3c-454d-8214-8941643fc99f/v2.0",
+                "https://sts.windows.net/d87548be-2c3c-454d-8214-8941643fc99f/"
+            ], 
             ValidAudience = "api://4e72630e-e7a9-444f-8287-c7b704149746",
             ValidateIssuer = true,
             ValidateAudience = true,
