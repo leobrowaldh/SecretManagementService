@@ -32,6 +32,8 @@ else { builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultA
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd")); //validates the JWT
 
+builder.Services.AddAuthorization();
+
 builder.ConfigureFunctionsWebApplication();
 
 // Application Insights:
