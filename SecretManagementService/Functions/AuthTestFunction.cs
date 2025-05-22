@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using SMSFunctionApp.Helpers;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace SMSFunctionApp.Functions;
@@ -34,24 +37,45 @@ public class AuthTestFunction
     //}
 
     [Function("AuthTestFunction")]
-    public IActionResult Run(
-    [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
-    ClaimsPrincipal user)
+    public async Task<IActionResult> Run(
+    [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req)
     {
-        // Check if function is hit at all
-        Console.WriteLine("Function invoked");
+        _logger.LogInformation("Function invoked");
 
-        if (user == null)
-            return new OkObjectResult("User is null – function hit but no ClaimsPrincipal");
+        var authHeader = req.Headers["Authorization"].FirstOrDefault();
 
-        if (!user.Identity?.IsAuthenticated == true)
-            return new OkObjectResult("Function hit – user not authenticated");
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            return new UnauthorizedResult();
 
-        var name = user.Identity?.Name ?? "Unknown";
-        var roles = string.Join(", ", user.FindAll(ClaimTypes.Role).Select(r => r.Value));
-        var groups = string.Join(", ", user.FindAll("groups").Select(g => g.Value));
-        var scopes = string.Join(", ", user.FindAll("http://schemas.microsoft.com/identity/claims/scope").Select(s => s.Value));
+        var token = authHeader.Substring("Bearer ".Length).Trim();
 
-        return new OkObjectResult($"Hello {name}! Roles: {roles}. Groups: {groups}. Scopes: {scopes}");
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidIssuer = "https://login.microsoftonline.com/d87548be-2c3c-454d-8214-8941643fc99f/v2.0", 
+            ValidAudience = "api://4e72630e-e7a9-444f-8287-c7b704149746",
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            IssuerSigningKeys = await AzureAuthHelper.GetSigningKeysAsync("d87548be-2c3c-454d-8214-8941643fc99f")
+        };
+
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
+
+            var name = principal.Identity?.Name ?? "Unknown";
+            var roles = string.Join(", ", principal.FindAll(ClaimTypes.Role).Select(r => r.Value));
+            var scopes = string.Join(", ", principal.FindAll("http://schemas.microsoft.com/identity/claims/scope").Select(s => s.Value));
+
+            return new OkObjectResult($"Hello {name}! Roles: {roles}. Scopes: {scopes}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Token validation failed");
+            return new UnauthorizedResult();
+        }
     }
+
 }
