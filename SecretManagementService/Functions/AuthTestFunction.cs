@@ -16,16 +16,38 @@ public class AuthTestFunction
         _logger = logger;
     }
 
-    [Authorize]
+    //[Authorize]
+    //[Function("AuthTestFunction")]
+    //public IActionResult Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
+    //ClaimsPrincipal user)
+    //{
+    //    if (user == null || !user.Identity?.IsAuthenticated == true)
+    //        return new UnauthorizedResult();
+
+    //    var name = user.Identity?.Name ?? "Unknown";
+
+    //    var roles = string.Join(", ", user.FindAll(ClaimTypes.Role).Select(r => r.Value));
+    //    var groups = string.Join(", ", user.FindAll("groups").Select(g => g.Value));
+    //    var scopes = string.Join(", ", user.FindAll("http://schemas.microsoft.com/identity/claims/scope").Select(s => s.Value));
+
+    //    return new OkObjectResult($"Hello {name}! Roles: {roles}. Groups: {groups}. Scopes: {scopes}");
+    //}
+
     [Function("AuthTestFunction")]
-    public IActionResult Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
+    public IActionResult Run(
+    [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
     ClaimsPrincipal user)
     {
-        if (user == null || !user.Identity?.IsAuthenticated == true)
-            return new UnauthorizedResult();
+        // Check if function is hit at all
+        Console.WriteLine("Function invoked");
+
+        if (user == null)
+            return new OkObjectResult("User is null – function hit but no ClaimsPrincipal");
+
+        if (!user.Identity?.IsAuthenticated == true)
+            return new OkObjectResult("Function hit – user not authenticated");
 
         var name = user.Identity?.Name ?? "Unknown";
-
         var roles = string.Join(", ", user.FindAll(ClaimTypes.Role).Select(r => r.Value));
         var groups = string.Join(", ", user.FindAll("groups").Select(g => g.Value));
         var scopes = string.Join(", ", user.FindAll("http://schemas.microsoft.com/identity/claims/scope").Select(s => s.Value));
