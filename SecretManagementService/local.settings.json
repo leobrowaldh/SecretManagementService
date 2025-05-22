@@ -7,6 +7,7 @@
     "KEY_VAULT_URI": "https://sms-appsecrets.vault.azure.net/",
     "AzureAd:Instance": "https://login.microsoftonline.com/",
     "AzureAd:TenantId": "d87548be-2c3c-454d-8214-8941643fc99f",
-    "AzureAd:ClientId": "4e72630e-e7a9-444f-8287-c7b704149746"
+    "AzureAd:ClientId": "4e72630e-e7a9-444f-8287-c7b704149746",
+    "AzureAd: Audience": "api://4e72630e-e7a9-444f-8287-c7b704149746"
   }
 }

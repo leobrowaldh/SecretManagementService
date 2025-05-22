@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -15,20 +16,20 @@ public class AuthTestFunction
         _logger = logger;
     }
 
+    [Authorize]
     [Function("AuthTestFunction")]
     public IActionResult Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
-    FunctionContext executionContext)
+    ClaimsPrincipal user)
     {
-        var principal = req.HttpContext.User;
-
-        if (principal == null || !principal.Identity?.IsAuthenticated == true)
-        {
+        if (user == null || !user.Identity?.IsAuthenticated == true)
             return new UnauthorizedResult();
-        }
 
-        var name = principal.Identity?.Name ?? "Unknown";
-        var roles = string.Join(", ", principal.FindAll(ClaimTypes.Role).Select(r => r.Value));
+        var name = user.Identity?.Name ?? "Unknown";
 
-        return new OkObjectResult($"Hello {name}! Your roles: {roles}");
+        var roles = string.Join(", ", user.FindAll(ClaimTypes.Role).Select(r => r.Value));
+        var groups = string.Join(", ", user.FindAll("groups").Select(g => g.Value));
+        var scopes = string.Join(", ", user.FindAll("http://schemas.microsoft.com/identity/claims/scope").Select(s => s.Value));
+
+        return new OkObjectResult($"Hello {name}! Roles: {roles}. Groups: {groups}. Scopes: {scopes}");
     }
 }
