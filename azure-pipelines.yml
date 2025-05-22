@@ -16,6 +16,7 @@ variables:
   environment: 'Development'
   hostId: 'func-secretmgmt-dev-001'
   daysUntilSecretsExpire: '30'
+  apiClientId: 'api://4e72630e-e7a9-444f-8287-c7b704149746'
 
 stages:
   - stage: Build
@@ -112,3 +113,4 @@ stages:
                       -AzureAd__Instance https://login.microsoftonline.com/
                       -AzureAd__TenantId $(tenantId)
                       -AzureAd__ClientId $(clientId)
+                      -AzureAd__Audience $(apiClientId)
