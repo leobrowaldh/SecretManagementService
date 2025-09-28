@@ -16,6 +16,7 @@ variables:
   environment: 'Development'
   hostId: 'func-secretmgmt-dev-001'
   daysUntilSecretsExpire: '30'
+  apiClientId: 'api://4e72630e-e7a9-444f-8287-c7b704149746'
 
 stages:
   - stage: Build
@@ -37,6 +38,7 @@ stages:
 
           # 2. Restore & Build
           - script: |
+              dotnet clean
               dotnet restore
               dotnet build --configuration Release
             displayName: 'Restore and Build Solution'
@@ -97,9 +99,9 @@ stages:
                     azureSubscription: $(serviceConnection)
                     appType: functionAppLinux
                     isFlexConsumption: true
+                    deploymentMethod: zipDeploy
                     appName: $(functionAppName)
-                    package: '$(Pipeline.Workspace)/drop/**/*.zip'
-                    deploymentMethod: 'auto'
+                    package: '$(Pipeline.Workspace)/drop/build$(Build.BuildId).zip'
                     runtimeStack: 'DOTNET-ISOLATED|9.0'
                     appSettings: >
                       -KEY_VAULT_URI $(keyVaultUri)
@@ -108,3 +110,7 @@ stages:
                       -AzureFunctionsWebHost__hostid $(hostId)
                       -ASPNETCORE_ENVIRONMENT $(environment)
                       -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
+                      -AzureAd__Instance https://login.microsoftonline.com/
+                      -AzureAd__TenantId $(tenantId)
+                      -AzureAd__ClientId $(clientId)
+                      -AzureAd__Audience $(apiClientId)

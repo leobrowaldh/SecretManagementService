@@ -12,6 +12,8 @@ using Db.Repositories;
 using Db.DbModels;
 using Db.Helpers;
 using Azure.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -26,6 +28,11 @@ if (string.IsNullOrEmpty(keyVaultUri))
 }
 //TODO: optimize DefaultAzureCredential
 else { builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential()); }
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd")); //validates the JWT
+
+builder.Services.AddAuthorization();
 
 builder.ConfigureFunctionsWebApplication();
 
@@ -89,7 +96,7 @@ builder.Services.AddSendGrid(options =>
 });
 
 
-SqlAlwaysEncryptedLocalConfig.RegisterAzureKeyVaultProvider();
+SqlAlwaysEncryptedConfig.RegisterAzureKeyVaultProvider();
 
 builder.Build().Run();
 

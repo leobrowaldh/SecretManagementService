@@ -23,7 +23,7 @@ public class GraphApiService: IGraphApiService
     public async Task<GraphApiGenericResponse<GraphApiApplicationResponse>> GetAppDataAsync()
     {
         _logger.LogInformation("Fetching authorization token...");
-        var token = await _tokenService.GetAccessTokenAsync();
+        var token = await _tokenService.GetGraphApiAccessTokenAsync();
 
         string applicationsUri = "applications?$count=false";
         var client = _httpClientFactory.CreateClient("GraphApi");

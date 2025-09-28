@@ -1,8 +1,10 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using SecretManagementService.Services;
+using SMSFunctionApp.Helpers;
+using System;
+using System.Threading.Tasks;
 
 namespace SMSFunctionApp.Functions;
 
@@ -19,16 +21,14 @@ public class DbSync
     }
 
     [Function(nameof(DbSync))]
-    public async Task Run([TimerTrigger("0 0 6 * * *", RunOnStartup = true)] TimerInfo myTimer)
+    [FixedDelayRetry(2, "00:00:10")] // Retry 2 times with a 10-second delay between attempts
+    public async Task Run([TimerTrigger("0 0 6 * * *")] TimerInfo myTimer)
     {
         _logger.LogInformation("C# Timer trigger function DbSync executed at: {executionTime}", DateTime.Now);
         
         _logger.LogInformation("Syncronizing database secrets with source...");
-        await _secretsService.SyncDatabaseSecretsWithSource();
 
-        if (myTimer.ScheduleStatus is not null)
-        {
-            _logger.LogInformation("Next timer schedule at: {nextSchedule}", myTimer.ScheduleStatus.Next);
-        }
+        await RetryHelper.ExecuteWithSqlRetryAsync(() => 
+            _secretsService.SyncDatabaseSecretsWithSource(),_logger);
     }
 }

@@ -25,7 +25,7 @@ public class AzureTokenService : IAzureTokenService
             ?? throw new InvalidOperationException("client-secret not found in configuration");
     }
 
-    public async Task<string> GetAccessTokenAsync()
+    public async Task<string> GetGraphApiAccessTokenAsync()
     {
         var tokenUri = $"{_tenantId}/oauth2/v2.0/token";
 
