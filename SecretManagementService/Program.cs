@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Db;
 using Db.Repositories;
 using Db.DbModels;
-using Db.Factories;
 using Db.Helpers;
 using Azure.Identity;
 
