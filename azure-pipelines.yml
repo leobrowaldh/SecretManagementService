@@ -1,78 +1,116 @@
-# .NET Core Function App to Windows on Azure
-# Build a .NET Core function app and deploy it to Azure as a Windows function App.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/en-us/azure/devops/pipelines/languages/dotnet-core
-
 trigger:
-- master
+  - master
+  - develop
 
 variables:
-  # Azure Resource Manager connection created during pipeline creation
-  azureSubscription: '49ffb78c-858a-45ea-bd6e-61128b5ddaef'
-
-  # Function app name
+  # Azure resources
+  serviceConnection: 'InnofactorManagedComponents-ServiceConnection'
   functionAppName: 'func-secretmanagementservice-development-001'
-
-  # Agent VM image name
-  vmImageName: 'windows-latest'
-
-  # Working Directory
+  vmImageName: 'ubuntu-latest'
+  # Path to the solution root containing your Function App project
   workingDirectory: '$(System.DefaultWorkingDirectory)/SecretManagementService'
+  # Environment settings
+  keyVaultUri: 'https://sms-appsecrets.vault.azure.net/'
+  clientId: '4e72630e-e7a9-444f-8287-c7b704149746'
+  tenantId: 'd87548be-2c3c-454d-8214-8941643fc99f'
+  environment: 'Development'
+  hostId: 'func-secretmgmt-dev-001'
+  daysUntilSecretsExpire: '30'
+  apiClientId: 'api://4e72630e-e7a9-444f-8287-c7b704149746'
 
 stages:
-- stage: Build
-  displayName: Build stage
+  - stage: Build
+    displayName: Build Stage
+    jobs:
+      - job: Build
+        displayName: Build
+        pool:
+          vmImage: $(vmImageName)
 
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      vmImage: $(vmImageName)
-
-    steps:
-    - task: DotNetCoreCLI@2
-      displayName: Build
-      inputs:
-        command: 'build'
-        projects: |
-          $(workingDirectory)/*.csproj
-        arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
-
-    - task: ArchiveFiles@2
-      displayName: 'Archive files'
-      inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
-        includeRootFolder: false
-        archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-        replaceExistingArchive: true
-
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-      artifact: drop
-
-- stage: Deploy
-  displayName: Deploy stage
-  dependsOn: Build
-  condition: succeeded()
-
-  jobs:
-  - deployment: Deploy
-    displayName: Deploy
-    environment: 'development'
-    pool:
-      vmImage: $(vmImageName)
-
-    strategy:
-      runOnce:
-        deploy:
-
-          steps:
-          - task: AzureFunctionApp@2
-            displayName: 'Azure functions app deploy'
+        steps:
+          # 1. Install .NET 9.0 SDK
+          - task: UseDotNet@2
+            displayName: 'Install .NET 9.0 SDK'
             inputs:
-              isFlexConsumption: true
-              connectedServiceNameARM: '$(azureSubscription)'
-              appType: 'functionAppLinux'
-              appName: $(functionAppName)
-              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              runtimeStack:  'DOTNET-ISOLATED|9.0'
+              packageType: 'sdk'
+              version: '9.0.x'
+              includePreviewVersions: true
+
+          # 2. Restore & Build
+          - script: |
+              dotnet clean
+              dotnet restore
+              dotnet build --configuration Release
+            displayName: 'Restore and Build Solution'
+
+          # 3. Publish only the Function App project
+          - task: DotNetCoreCLI@2
+            displayName: 'Publish SMSFunctionApp'
+            inputs:
+              command: 'publish'
+              publishWebProjects: false
+              projects: '$(workingDirectory)/SMSFunctionApp.csproj'
+              arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)/publish_output'
+              zipAfterPublish: false
+              modifyOutputPath: false
+
+          # 4. Archive the published output
+          - task: ArchiveFiles@2
+            displayName: 'Archive published output'
+            inputs:
+              rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish_output'
+              includeRootFolder: false
+              archiveFile: '$(Build.ArtifactStagingDirectory)/build$(Build.BuildId).zip'
+
+          # 5. Publish as pipeline artifact
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Artifact: drop'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/build$(Build.BuildId).zip'
+              artifact: 'drop'
+
+  - stage: Deploy
+    displayName: Deploy Stage
+    dependsOn: Build
+    condition: succeeded()
+
+    jobs:
+      - deployment: Deploy
+        displayName: Deploy to Azure Function
+        environment: 'development'
+        pool:
+          vmImage: $(vmImageName)
+
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # 1. Download the 'drop' artifact
+                - task: DownloadPipelineArtifact@2
+                  displayName: 'Download Artifact: drop'
+                  inputs:
+                    artifact: 'drop'
+                    targetPath: '$(Pipeline.Workspace)'
+
+                # 2. Deploy Function App
+                - task: AzureFunctionApp@2
+                  displayName: 'Deploy Function App'
+                  inputs:
+                    azureSubscription: $(serviceConnection)
+                    appType: functionAppLinux
+                    isFlexConsumption: true
+                    deploymentMethod: zipDeploy
+                    appName: $(functionAppName)
+                    package: '$(Pipeline.Workspace)/drop/build$(Build.BuildId).zip'
+                    runtimeStack: 'DOTNET-ISOLATED|9.0'
+                    appSettings: >
+                      -KEY_VAULT_URI $(keyVaultUri)
+                      -CLIENT_ID $(clientId)
+                      -TENANT_ID $(tenantId)
+                      -AzureFunctionsWebHost__hostid $(hostId)
+                      -ASPNETCORE_ENVIRONMENT $(environment)
+                      -DAYS_UNTIL_SECRET_EXPIRES $(daysUntilSecretsExpire)
+                      -AzureAd__Instance https://login.microsoftonline.com/
+                      -AzureAd__TenantId $(tenantId)
+                      -AzureAd__ClientId $(clientId)
+                      -AzureAd__Audience $(apiClientId)

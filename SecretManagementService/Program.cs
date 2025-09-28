@@ -1,30 +1,103 @@
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Services;
-using Azure.Identity;
-using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Net.Http.Headers;
+using SecretManagementService.Services;
+using Microsoft.Azure.Functions.Worker;
+using SendGrid.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using Db;
+using Db.Repositories;
+using Db.DbModels;
+using Db.Helpers;
+using Azure.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
-// Fetch the Key Vault URI from environment variables or local.settings.json
+//builder.Configuration.ConfigureKeyVault();
+//not working when deployed
+
 var keyVaultUri = builder.Configuration["KEY_VAULT_URI"];
 
-if (!string.IsNullOrEmpty(keyVaultUri))
+if (string.IsNullOrEmpty(keyVaultUri))
 {
-    // Add Azure Key Vault to the IConfiguration pipeline
-    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+    Console.WriteLine("KEY_VAULT_URI not found in configuration");
 }
+//TODO: optimize DefaultAzureCredential
+else { builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential()); }
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd")); //validates the JWT
+
+builder.Services.AddAuthorization();
 
 builder.ConfigureFunctionsWebApplication();
 
-// Application Insights isn't enabled by default. See https://aka.ms/AAt8mw4.
-// builder.Services
-//     .AddApplicationInsightsTelemetryWorkerService()
-//     .ConfigureFunctionsApplicationInsights();
+// Application Insights:
+builder.Services
+    .AddApplicationInsightsTelemetryWorkerService()
+    .ConfigureFunctionsApplicationInsights();
 
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddHttpClient();
+// Services
+builder.Services.AddScoped<IAzureTokenService, AzureTokenService>();
+builder.Services.AddScoped<IGraphApiService, GraphApiService>();
+builder.Services.AddScoped<ISecretsService, SecretsService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ISmsService, SmsService>();
+builder.Services.AddScoped<IDbService, DbService>();
+
+//DbRepos
+builder.Services.AddScoped<ISecretRepository, SecretRepository>();
+builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
+builder.Services.AddScoped<IGenericRepository<Subscriber>, SubscriberRepository>();
+builder.Services.AddScoped<IGenericRepository<ApiEndpoint>, ApiEndpointRepository>();
+builder.Services.AddScoped<IGenericRepository<Email>, EmailRepository>();
+builder.Services.AddScoped<IGenericRepository<Phone>, PhoneRepository>();
+
+
+builder.Services.AddDbContext<SmsDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SecretManagementServiceContext"));
+});
+
+builder.Services.AddHttpContextAccessor();
+
+
+// For Azure authentication with client secret
+builder.Services.AddHttpClient(name: "AzureAuth",
+    configureClient: options =>
+    {
+        options.BaseAddress = new Uri("https://login.microsoftonline.com/");
+        options.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
+    });
+
+builder.Services.AddHttpClient(name: "GraphApi",
+    configureClient: options =>
+    {
+        options.BaseAddress = new Uri("https://graph.microsoft.com/v1.0/");
+        options.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
+    });
+
+// SendGrid: email service
+builder.Services.AddSendGrid(options =>
+{
+    // Fetch the SendGrid API key from Key Vault
+    var sendGridApiKey = builder.Configuration["sendgrid-api-key"];
+    if (string.IsNullOrEmpty(sendGridApiKey))
+    {
+        Console.WriteLine("sendgrid-api-key is not found in Key Vault");
+    }
+
+    options.ApiKey = sendGridApiKey;
+});
+
+
+SqlAlwaysEncryptedConfig.RegisterAzureKeyVaultProvider();
 
 builder.Build().Run();
+
+
